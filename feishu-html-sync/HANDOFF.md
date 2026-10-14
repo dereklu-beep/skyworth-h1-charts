@@ -21,15 +21,13 @@ cp feishu-html-sync/box/sync_pull.py /workspace/sdmc_skyworth/sync_pull.py
 ```bash
 cd /workspace/sdmc_skyworth
 T=v71_fix/华曦达vs创维财报对比_v71_可编辑.html
-# 1) 一次性把 data-eid + sync-rev 写进主稿（之后 eid 不再漂移）
-python3 sync_pull.py --target "$T" --stamp
-# 2) 演练：读取 drops + 收件箱，只出报告不写文件
+# 1) 演练：读取 drops + 收件箱，只出报告不写文件
 python3 sync_pull.py --target "$T" --dry
-# 3) 同链覆盖（file_token 永远不变）
-python3 /workspace/feishu/replace.py FXqHbFI37oGOCyxT3NkcVhjnnRg "$T"
+# 2) 正式应用，然后同链覆盖（file_token 永远不变）
+python3 sync_pull.py --target "$T" && python3 /workspace/feishu/replace.py FXqHbFI37oGOCyxT3NkcVhjnnRg "$T"
 ```
 
-把 `--stamp` 后的主稿 replace 上去之后，**已经打开的 Chrome 标签页都要刷新一次**，之后的 eid 就稳定了。
+`--stamp`（把 data-eid 和 sync-rev 写进主稿）**只用于新模板 `report_template` 生成的报告**，v71 不要跑（原因见下文「v71 报告审稿」）。对新模板报告跑过 stamp 并 replace 之后，已经打开的 Chrome 标签页要刷新一次。
 
 ## 与旧版的行为差异（relay / sync_watch 无需改动也能用）
 
@@ -42,6 +40,17 @@ python3 /workspace/feishu/replace.py FXqHbFI37oGOCyxT3NkcVhjnnRg "$T"
 - 成功写入时会更新 `<meta name="sync-rev">`，追加一行到 `v41/sync_ledger.jsonl`，并输出 `applied ->` 一行（relay 的 `kick_apply` 靠它判断是否 replace），外加一行 `SYNC_RESULT {json}`。
 - 新开关：`--status-dir DIR`（每个包写一份 `<id>.json` 结果）、`--replay v41/sync_ledger.jsonl`（作者重建 HTML 后重放 Derek 的 Chrome 修改）、`--retry-unresolved`、`--out`。
 - 体积膨胀保护（超过 1.15 倍 + 5000 字节就拒写）保留。
+
+## v71 报告审稿
+
+见 `feishu-html-sync/REPORT_REVIEW.md`。结论是有条件放行，有 3 个阻断项：
+1. 「前同事」仍挂在 `#t-eq`「杨健家族」和 `#t-cost`「深圳创展」上；
+2. 国际发售其余占总股本应为 6.65%，报告 4 处写成 6.64%；
+3. 顶栏仍有「恢复原始数据」等按钮。
+
+`sync_pull.py` 已修正为能处理 v71 的 `<template id="report-tpl">` 正文。修正前，内容匹配会把整份 v71 正文漏掉；拷贝时请务必用本分支的最新版本。
+
+注意：v71 是自带客户端（v46、`bSync`）的旧结构，**不要**对它跑 `--stamp`。stamp 的编号规则是按新模板的 `main .doc` 结构写的，v71 上会写入 0 个；即使写入，也可能和 v46 客户端运行时的编号冲突。
 
 ## 尚未在本分支实现（只有设计，见 PROBLEMS_AND_SOLUTIONS.md）
 

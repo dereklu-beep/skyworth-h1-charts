@@ -259,8 +259,9 @@ class Doc:
 
     @staticmethod
     def _in_body(el):
-        return el.tag not in ('head', 'script', 'style', 'template') and not any(
-            a.tag in ('head', 'script', 'style', 'template') for a in el.ancestors())
+        # <template id="report-tpl"> holds the whole body in v71-style reports, so it must stay searchable
+        return el.tag not in ('head', 'script', 'style') and not any(
+            a.tag in ('head', 'script', 'style') for a in el.ancestors())
 
     def by_eid(self, eid):
         return [e for e in self.body if e.attrs.get('data-eid') == str(eid)]

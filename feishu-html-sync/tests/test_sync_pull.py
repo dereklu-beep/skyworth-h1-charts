@@ -119,6 +119,15 @@ class ApplyOps(unittest.TestCase):
         self.assertEqual(charts['c1']['rows'][0][1], 3.6)
         self.assertEqual(charts['c2']['rows'][1][1], 40)
 
+    def test_v71_body_inside_template_is_editable(self):
+        tpl = ('<body><div class="sheet" id="sheet"></div><template id="report-tpl"><section class="blk">'
+               '<table><tr><td rowspan="4"><b>杨健家族（公司高管党慧、陈京华前同事）</b></td><td>深圳创展</td></tr>'
+               '<tr><td>杨健</td></tr></table></section></template></body>')
+        op = {'op': 'edit', 'tag': 'td', 'old': '<b>杨健家族（公司高管党慧、陈京华前同事）</b>', 'new': '<b>杨健家族</b>'}
+        out, res = sp.apply_ops(tpl, [op])
+        self.assertTrue(res[0]['ok'], res)
+        self.assertIn('<td rowspan="4"><b>杨健家族</b></td>', out)
+
     def test_bad_ops_do_not_abort_package(self):
         ops = [None, {'op': 'weird'}, {'op': 'edit'}, {'op': 'edit', 'old': '客户集中度高。', 'new': '集中度高。'}]
         out, res = sp.apply_ops(FIXTURE, ops)
