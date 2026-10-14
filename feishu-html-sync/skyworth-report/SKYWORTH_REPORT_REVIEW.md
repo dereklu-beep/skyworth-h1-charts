@@ -1,5 +1,7 @@
 # 创维数字｜2026H1 财报分析 · 编辑审稿与终稿说明
 
+> **已被取代**：现行终稿为 `创维数字专报_入稿终稿.html`（以冻结基线 548b9279 为底，审稿＋深挖落稿），改动清单见 `创维数字专报_入稿终稿_DELTA.md`。本文与 `创维数字专报_终稿.html`（9f4276ec）仅作历史记录。
+
 - 审稿对象（现行飞书版）：`创维财报分析_v1_可编辑.html`（飞书 `PdxFb…`，来自 opus_skyworth_existing_pack_4c9b.tgz）
 - 终稿：`feishu-html-sync/skyworth-report/创维数字专报_终稿.html`（PR #2 壳 `skyworth-report.html`＋`check.py`）
 - 改动清单：`feishu-html-sync/skyworth-report/创维数字专报_终稿_DELTA.md`
