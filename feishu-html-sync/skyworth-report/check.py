@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""创维财报分析 HTML 自检（只用标准库）。
+"""创维数字｜2026H1 财报分析 HTML 自检（只用标准库）。
+
+报告主体：创维数字股份有限公司（000810.SZ，简称创维数字）。创维集团（00751.HK）只允许出现在
+9 股权与资本结构（s-k-eq），作为间接控股股东。
 
 用法：
   python3 check.py [skyworth-report.html]             # 自检，有 FAIL 时退出码 1
@@ -25,6 +28,8 @@ VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "met
 ANGLE = re.compile(r"[<>＜＞≤≥]")
 FORECAST = re.compile(r"预测|情景|2026H2|2026 ?年下半年|全年展望|核实清单")
 TAG_WORDS = re.compile(r"事实|计算|推断|代理口径")
+GROUP = re.compile(r"创维集团|00751")
+BARE = re.compile(r"创维(?!数字|集团)")
 
 
 class Node:
@@ -122,7 +127,7 @@ def check(path):
         fails.append(f"章节顺序与骨架不符：{order}")
     pos = {s: i for i, s in enumerate(sec_ids)}
     if "s-cmp-intro" in pos and any(pos.get(s, -1) > pos["s-cmp-intro"] for s in REQUIRED if s.startswith("s-k-")):
-        fails.append("创维本体章节出现在对比导读之后")
+        fails.append("创维数字本体章节出现在对比导读之后")
 
     eids = [n.attrs["data-eid"] for n in nodes if "data-eid" in n.attrs]
     dup = sorted({e for e in eids if eids.count(e) > 1})
@@ -182,6 +187,13 @@ def check(path):
     for s in front:
         if "华曦达" in s.all_text():
             fails.append(f"前半 {s.attrs.get('id')} 出现「华曦达」：对比只放后半")
+    for text, n in tree.texts:
+        sec = section_of(n)
+        sid = sec.attrs.get("id") if sec else "页外"
+        if GROUP.search(text) and sid != "s-k-eq":
+            fails.append(f"{sid} 出现「{GROUP.search(text).group(0)}」：创维集团只在 9 股权与资本结构 作为间接控股股东出现")
+        if BARE.search(text):
+            warns.append(f"{sid} 出现简称「创维」：本报统一写「创维数字」，全称创维数字股份有限公司（000810.SZ）")
     for text, n in tree.texts:
         m = FORECAST.search(text)
         if m:
