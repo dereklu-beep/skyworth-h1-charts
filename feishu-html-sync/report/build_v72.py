@@ -183,6 +183,43 @@ def fix_toolbar(s):
     return s
 
 
+LOCAL_JS = r"""
+const LOCAL_KEY='sdmc_local_edits:'+location.pathname+':'+document.getElementById('report-tpl').innerHTML.length;
+function saveLocal(){ try{ const ops=collectEdits(); if(ops.length) localStorage.setItem(LOCAL_KEY,JSON.stringify(ops)); else localStorage.removeItem(LOCAL_KEY); }catch(e){} }
+function restoreLocal(){
+  let ops=null; try{ ops=JSON.parse(localStorage.getItem(LOCAL_KEY)||'null'); }catch(e){}
+  if(!Array.isArray(ops)||!ops.length) return 0;
+  let n=0;
+  ops.forEach(o=>{
+    if(o.op==='data'){ if(String(o.key)[0]==='@') DATA[o.key.slice(1)]=o.new; else { DATA.v=DATA.v||{}; DATA.v[o.key]=o.new; } n++; return; }
+    const el=tplNode(o.eid); if(!el||el.innerHTML!==o.old) return;
+    if(o.op==='edit') el.innerHTML=o.new; else if(o.op==='del') el.remove();
+    n++;
+  });
+  if(n) rebuildSheet();
+  return n;
+}
+window.__restoredLocal=restoreLocal();
+window.addEventListener('pagehide',saveLocal);
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') saveLocal(); });
+bEdit.addEventListener('click',saveLocal);
+document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){ e.preventDefault(); saveLocal(); const b=document.getElementById('bSave'); if(b) b.click(); } });
+"""
+
+
+def fix_local_edits(s):
+    s = sub(s, '<button class="btn" id="bSync" type="button" hidden',
+            '<button id="bSave" type="button" hidden aria-hidden="true" style="display:none!important"></button>'
+            '<button class="btn" id="bSync" type="button" hidden', label='bSave anchor')
+    s = sub(s, '\nrebuildSheet(); takeSnap();\n})();', '\nrebuildSheet(); takeSnap();\n' + LOCAL_JS + '})();',
+            label='local edits js')
+    s = sub(s, "a.download='华曦达_2026H1_CFO简报_'", "a.download='华曦达_2026H1财报分析_改后_'", label='download name')
+    s = sub(s, '「同步修改」会保存改写和删除并写回同一飞书链接。',
+            '「同步修改」会保存改写和删除并写回同一飞书链接；改动自动留在本浏览器，Ctrl+S（Mac 为 ⌘S）下载改过的页面。',
+            label='editbar save')
+    return s
+
+
 WIDE_TABLES = ('t-s-mempx', 't-s-cycle', 't-s-c26', 't-s-c25', 't-ipo-alloc', 't-neeq', 't-cost', 't-peer')
 
 
@@ -213,6 +250,7 @@ def main(src, notes_src_path, notes_path, out):
     s = in_tpl(s, fix_conclusions)
     s = in_tpl(s, fix_leftovers)
     s = fix_toolbar(s)
+    s = fix_local_edits(s)
     s = fix_layout(s)
     s = fix_meta(s)
     with open(out, 'w', encoding='utf-8') as f:

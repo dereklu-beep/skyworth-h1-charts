@@ -75,6 +75,26 @@ try {
     }
     await evaluate(`document.getElementById('bEdit').click()`);
   }
+  try {
+  // persistence: edit one paragraph, reload, expect it restored and still counted as a sync edit
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+  await evaluate(`localStorage.clear()`);
+  await send('Page.navigate', { url: 'file://' + file }); await sleep(3000);
+  await evaluate(`(() => { document.getElementById('bEdit').click();
+    const el = [...document.querySelectorAll('#sheet [contenteditable="true"]')].find(n => n.textContent.includes('接下来看什么'));
+    el.innerHTML = el.innerHTML.replace('接下来看什么', '接下来要看'); el.dispatchEvent(new Event('input', { bubbles: true }));
+    document.getElementById('bEdit').click(); })()`);
+  await send('Page.navigate', { url: 'file://' + file }); await sleep(3000);
+  out.persist = await evaluate(`({ restored: window.__restoredLocal, text: document.getElementById('sheet').innerText.includes('接下来要看'),
+    ops: window.__collectEdits().map(o => o.op) })`);
+  if (shotDir) {
+    await send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: path.resolve(shotDir) });
+    await evaluate(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true }))`);
+    await sleep(1500);
+    out.download = (await import('node:fs')).readdirSync(shotDir).filter(f => f.endsWith('.html'));
+  }
+  await evaluate(`localStorage.clear()`);
+  } catch (e) { out.persistError = String(e.message || e).slice(0, 300); }
   console.log(JSON.stringify(out, null, 1));
 } finally {
   try { ws && ws.close(); } catch {}
