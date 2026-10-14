@@ -9,15 +9,15 @@
   "edge_admin_token": "",
   "reports": {
     "huaxida-h1": {
+      "feishu_kind": "drive_html",
       "drive_file_token": "FXqHbFI37oGOCyxT3NkcVhjnnRg",
-      "report_docx_token": "",
       "master_html": "/workspace/sdmc_skyworth/v71_fix/华曦达vs创维财报对比_v71_可编辑.html",
       "derek_confirmed": false
     },
     "skyworth-report": {
+      "feishu_kind": "drive_html",
       "drive_file_token": "PdxFbDlbDorRAexT1hRcpHuCnBf",
-      "report_docx_token": "",
-      "master_html": "/workspace/sdmc_skyworth/skyworth/skyworth-report.html",
+      "master_html": "/workspace/sdmc_skyworth/skyworth_report/创维财报分析_v1_可编辑.html",
       "derek_confirmed": false
     }
   }

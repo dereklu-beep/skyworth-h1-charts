@@ -270,7 +270,7 @@ class Pipeline:
             res['drive'] = self.step([os.path.join(HERE, 'replace.py'), '--rep', rep, r['drive_file_token'], r['master_html']])
         else:
             res['drive'] = self.step([os.path.join(HERE, 'replace.py'), '--rep', rep, '--publish-only', r['master_html']])
-        if config.get('push_docx') and r.get('report_docx_token'):
+        if config.get('push_docx') and r.get('feishu_kind') == 'docx' and r.get('report_docx_token'):
             res['docx'] = self.step([os.path.join(HERE, 'docx_sync.py'), '--doc', r['report_docx_token'], '--html', r['master_html']])
         for pid in ids:
             write_status(pid, stage='feishu' if all(v in (None, 'ok') for v in (res['drive'], res['docx'])) else 'feishu_error',

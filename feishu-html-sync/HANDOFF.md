@@ -10,8 +10,10 @@ assistant 的 box 路径 **`/workspace/sdmc_skyworth` 仍然是在编草稿的�
 
 | 报告 | rep | 飞书同链 | box 主稿 |
 |---|---|---|---|
-| 华曦达 | `huaxida-h1` | 飞书文档 file_token `FXqHbFI37oGOCyxT3NkcVhjnnRg` | `/workspace/sdmc_skyworth/v71_fix/华曦达vs创维财报对比_v71_可编辑.html` |
-| 创维 | `skyworth-report` | 创维草稿 file_token `PdxFbDlbDorRAexT1hRcpHuCnBf` | `/workspace/sdmc_skyworth/skyworth/skyworth-report.html`（**请在 box 上核对实际文件名**，改 `sync_config.json`） |
+| 华曦达 | `huaxida-h1` | 云盘 HTML 文件 `FXqHbFI37oGOCyxT3NkcVhjnnRg` | `/workspace/sdmc_skyworth/v71_fix/华曦达vs创维财报对比_v71_可编辑.html` |
+| 创维数字专报 | `skyworth-report` | 云盘 HTML 文件 `PdxFbDlbDorRAexT1hRcpHuCnBf` | `/workspace/sdmc_skyworth/skyworth_report/创维财报分析_v1_可编辑.html` |
+
+两个飞书目标都是**云盘 HTML 文件上传**，不是 docx，统一走同链 Drive 文件覆盖（`replace.py`，file_token 不变）。
 
 Cloud agent 只能看到 GitHub 仓库和附件，看不到 box。因此：
 - 需要云端审稿时，必须先把草稿从 box **导出或作为附件**交给 cloud agent；
@@ -48,10 +50,12 @@ relay 会在下一次同步时自动走 Drive 覆盖。上面第 3 步只用于�
 
 relay 只按包里的 `rep` 分流。每个 rep 对应自己的主稿、drops 目录和飞书 token：
 
-| rep（及别名） | Drive file_token | docx token | drops |
-|---|---|---|---|
-| `huaxida-h1`（华曦达 / sdmc / huaxida） | `FXqHbFI37oGOCyxT3NkcVhjnnRg` | 未登记 | `/workspace/sdmc_skyworth/v41/sync_inbox_drops/` |
-| `skyworth-report`（创维 / skyworth） | `PdxFbDlbDorRAexT1hRcpHuCnBf` | 未登记 | `/workspace/sdmc_skyworth/skyworth/sync/drops/` |
+| rep（及别名） | 飞书目标（`feishu_kind: drive_html`） | drops |
+|---|---|---|
+| `huaxida-h1`（华曦达 / sdmc / huaxida） | 云盘 HTML `FXqHbFI37oGOCyxT3NkcVhjnnRg` | `/workspace/sdmc_skyworth/v41/sync_inbox_drops/` |
+| `skyworth-report`（创维 / 创维数字 / skyworth） | 云盘 HTML `PdxFbDlbDorRAexT1hRcpHuCnBf` | `/workspace/sdmc_skyworth/skyworth_report/sync/drops/` |
+
+docx 块同步（`docx_sync.py`）对这两份报告**不使用**：relay 只在 `feishu_kind: "docx"` 时才调用它。代码保留，供以后的 docx 报告使用。
 
 规则：
 - `rep` 缺失或未登记的包，放进 `/workspace/feishu/relay/held/`，**哪份主稿都不写**。唯一的例外是线上 v71 页面自带的旧客户端：它发的包只有 `ver:"v46"`、没有 `rep`，会按 `legacy_unlabelled_ver` 归到华曦达。对 v71 跑过 `fix_live_page.py` 之后，它也会带上 `rep:"huaxida-h1"`。
@@ -79,7 +83,7 @@ ln -sf /workspace/feishu/sync_pull.py /workspace/sdmc_skyworth/sync_pull.py   # 
 | `box/relay.py` | 同上 | `/sync` 收包，按 rep 分流或 held，按报告串行执行 sync_pull，再 replace / docx；提供 `/status/<id>`、`/rev`、`/health`、`/r/<rep>` |
 | `box/sync_pull.py` | 同上（软链到 `sdmc_skyworth`） | 外科回写（PR #1），另加 `sid` 定位、`--rep` 过滤、写入时补 eid |
 | `box/replace.py` | 同上 | 同链覆盖，CLI 与旧版一致；加了跨报告校验和闸门 |
-| `box/docx_sync.py` | 同上 | HTML 到飞书 docx：只更新变化的块；比较号写成「低于 / 超过」；`relink` 用于更新入口链接 |
+| `box/docx_sync.py` | 同上 | HTML 到飞书 docx：只更新变化的块；比较号写成「低于 / 超过」。这两份报告不用（都是云盘 HTML）；`relink` 仍可用于入口 docx |
 | `box/feishu_auth.py` | 同上 | Derek 用户身份（refresh token 自动轮换） |
 | `box/ws_poller.py` | 同上 | 从 webhook.site 或 edge 队列拉包；relay 收下后才删除或确认 |
 | `box/fix_live_page.py` | 同上 | v71 顶栏修正（见第 4 节） |
@@ -139,8 +143,6 @@ python3 /workspace/feishu/fix_live_page.py "$T" --rep huaxida-h1         # 自�
 
 - `supervise.py` 保活脚本，以及 Pinggy URL 变化时自动 `docx_sync.py relink` 入口链接（relink 也受闸门约束）。
 - `check_template.py`：build 或 replace 前检查顶栏按钮。
-- 两份报告的 docx token 还没登记（`report_docx_token` 为空，所以 docx 块同步不会运行）。
-- 创维主稿在 box 上的实际文件名，需要在 `sync_config.json` 里核对。
 
 ## 10. 测试（全部离线，不连飞书）
 

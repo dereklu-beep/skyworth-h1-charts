@@ -43,6 +43,9 @@ class Gate(unittest.TestCase):
         self.assertTrue(all(r.get('derek_confirmed') is False for r in config.DEFAULTS['reports'].values()))
         self.assertEqual(config.DEFAULTS['reports']['skyworth-report']['drive_file_token'], 'PdxFbDlbDorRAexT1hRcpHuCnBf')
         self.assertEqual(config.DEFAULTS['reports']['huaxida-h1']['drive_file_token'], 'FXqHbFI37oGOCyxT3NkcVhjnnRg')
+        self.assertEqual(config.DEFAULTS['reports']['skyworth-report']['master_html'],
+                         '/workspace/sdmc_skyworth/skyworth_report/创维财报分析_v1_可编辑.html')
+        self.assertTrue(all(r['feishu_kind'] == 'drive_html' for r in config.DEFAULTS['reports'].values()))
 
     def test_replace_refused_before_any_network_call(self):
         with self.assertRaisesRegex(config.GateClosed, 'feishu_live_writes is off'):

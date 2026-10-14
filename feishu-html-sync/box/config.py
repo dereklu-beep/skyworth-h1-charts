@@ -45,6 +45,8 @@ DEFAULTS = {
         'huaxida-h1': {
             'title': '华曦达 SDMC｜2026H1 财报分析',
             'aliases': ['华曦达', 'sdmc', 'huaxida'],
+            # Feishu target is a Drive HTML file (same-link replace); docx block sync is unused for this report
+            'feishu_kind': 'drive_html',
             'drive_file_token': 'FXqHbFI37oGOCyxT3NkcVhjnnRg',
             'report_docx_token': '',
             'master_html': '/workspace/sdmc_skyworth/v71_fix/华曦达vs创维财报对比_v71_可编辑.html',
@@ -56,14 +58,14 @@ DEFAULTS = {
             'derek_confirmed': False,
         },
         'skyworth-report': {
-            'title': '创维财报分析',
-            'aliases': ['创维', 'skyworth'],
+            'title': '创维数字专报',
+            'aliases': ['创维', '创维数字', 'skyworth'],
+            'feishu_kind': 'drive_html',
             'drive_file_token': 'PdxFbDlbDorRAexT1hRcpHuCnBf',
             'report_docx_token': '',
-            # confirm the live draft filename on the box; /workspace/sdmc_skyworth is the source of truth
-            'master_html': '/workspace/sdmc_skyworth/skyworth/skyworth-report.html',
-            'state_dir': '/workspace/sdmc_skyworth/skyworth/sync',
-            'drops_dir': '/workspace/sdmc_skyworth/skyworth/sync/drops',
+            'master_html': '/workspace/sdmc_skyworth/skyworth_report/创维财报分析_v1_可编辑.html',
+            'state_dir': '/workspace/sdmc_skyworth/skyworth_report/sync',
+            'drops_dir': '/workspace/sdmc_skyworth/skyworth_report/sync/drops',
             'hosted_html': '/workspace/feishu/relay/hosted/skyworth-report.html',
             'legacy_unlabelled_ver': [],
             'derek_confirmed': False,
