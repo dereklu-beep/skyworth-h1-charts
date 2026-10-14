@@ -52,9 +52,22 @@
 
 ## 发布
 
-本机两个飞书 MCP 都连不上，也没有 `FEISHU_APP_ID` 等凭据。由助理在有凭据的机器执行：
+本机两个飞书 MCP 都连不上，也没有 `FEISHU_APP_ID` 等凭据。由助理在有凭据的机器上，于 `feishu-html-sync/` 目录执行（先加 `--dry` 看计划）：
 
 ```bash
-python3 box/publish_feishu.py drive --file-token FXqHbFI37oGOCyxT3NkcVhjnnRg --html report/华曦达_2026H1财报分析_可编辑.html
-python3 box/publish_feishu.py docx --html <渲染后 DOM> --title "华曦达 2026H1 财报分析"
+# 1. 同一 Drive 链接原地覆盖 HTML（应用身份；file_token 不变，下载回来逐字节核对）
+FEISHU_APP_ID=... FEISHU_APP_SECRET=... \
+python3 box/publish_feishu.py drive --file-token FXqHbFI37oGOCyxT3NkcVhjnnRg \
+  --html report/华曦达_2026H1财报分析_可编辑.html
+
+# 2. 首次建飞书在线文档（用户身份，普通标题/段落/表格块；自动用无头 Chrome 渲染）
+FEISHU_USER_ACCESS_TOKEN=... \
+python3 box/publish_feishu.py docx --html report/华曦达_2026H1财报分析_可编辑.html \
+  --title "华曦达 SDMC｜2026H1 财报分析" --folder <文件夹 token>
+
+# 3. 之后只改文字：按块更新原文档，不删了重写
+FEISHU_USER_ACCESS_TOKEN=... \
+python3 box/publish_feishu.py docx --html report/华曦达_2026H1财报分析_可编辑.html --doc-id <上一步的 document_id>
 ```
+
+docx 计划（v72）：207 次逻辑调用；44 张表最大 9 列，超过 9 行的表先建 9 行再逐行追加，保持一张表；单元格写入每批 200 条，空单元格跳过。发布后把 document_id 链接填进 `CONTEXT.md`。
