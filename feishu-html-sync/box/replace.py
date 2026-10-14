@@ -8,6 +8,8 @@ then republish the hosted Chrome copy (relay /chrome and the edge worker).
 Cross-report guard: the token must be the registered Drive token of the report (config `reports`), and
 the HTML's <meta name="report-id"|"report-name"> (when present) must resolve to that same report.
 
+Gated: refused (exit 3, before any network call) unless config feishu_live_writes and the report's
+derek_confirmed are both true — the same-link replace runs on the box only after Derek confirms.
 Writes use Derek's user identity (feishu_auth). There is deliberately no code path that uploads
 without file_token: a call that would create a new Drive file is refused.
 """
@@ -63,6 +65,7 @@ def replace_file_content(file_token, local_path, file_name=None, verify=True, id
     with open(local_path, 'rb') as f:
         data = f.read()
     rep = check_pair(file_token, data, rep)
+    config.require_live(rep, 'Drive replace of %s' % file_token)
     H = feishu_auth.headers(identity)
     if file_name is None:
         m = _meta(H, file_token)
@@ -131,7 +134,11 @@ def main(argv):
         return
     if len(argv) != 2:
         raise SystemExit(__doc__)
-    print(replace_file_content(argv[0], argv[1], rep=rep))
+    try:
+        print(replace_file_content(argv[0], argv[1], rep=rep))
+    except config.GateClosed as e:
+        print('GATED', e, file=sys.stderr)
+        raise SystemExit(3)
 
 
 if __name__ == '__main__':

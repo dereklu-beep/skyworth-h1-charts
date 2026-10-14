@@ -83,7 +83,7 @@ class Routing(unittest.TestCase):
         self.assertTrue(res['written'], res)
         self.assertIn('<td data-eid="3">深圳创展（改）</td>', self.box.read('sw', 'master.html'))
         self.assertIn('<td>深圳创展</td><td>华南</td>', self.box.read('hx', 'master.html'))
-        self.assertEqual(relay.read_status('c1')['stage'], 'feishu')
+        self.assertEqual(relay.read_status('c1')['stage'], 'gated')
         self.assertTrue(os.path.isfile(self.box.j('relay', 'hosted', 'sw.html')))
         self.assertFalse(os.path.exists(self.box.j('relay', 'hosted', 'hx.html')))
 
@@ -120,7 +120,9 @@ class Routing(unittest.TestCase):
                 return type('R', (), {'json': lambda self: {'code': 0}})()
 
         import sys
+        import config
         import feishu_auth
+        config.load()['feishu_live_writes'] = True
         sys.modules['requests'], old = FakeReq, sys.modules.get('requests')
         orig, feishu_auth.headers = feishu_auth.headers, lambda identity='user': {}
         relay.time.sleep, sleep = (lambda s: None), relay.time.sleep

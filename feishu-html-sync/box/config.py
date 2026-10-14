@@ -23,6 +23,9 @@ DEFAULTS = {
     'relay_port': 8787,
     'allowed_origins': ['null', 'https://*.feishu.cn', 'https://*.workers.dev', 'https://*.pinggy.net',
                         'https://*.pinggy.link', 'http://127.0.0.1:8787', 'http://localhost:8787'],
+    # Group gate: both Feishu docs wait on Derek. No Feishu write/upload (Drive replace, docx blocks, relink,
+    # inbox) runs unless this is true AND the report has derek_confirmed. Never enable while testing.
+    'feishu_live_writes': False,
     'append_inbox': True,
     'auto_apply': True,
     'apply_debounce_s': 2.0,
@@ -50,6 +53,7 @@ DEFAULTS = {
             'hosted_html': '/workspace/feishu/relay/hosted/report.html',
             # the live v71 page (built-in v46 client) sends no `rep`; only that exact client version maps here
             'legacy_unlabelled_ver': ['v46'],
+            'derek_confirmed': False,
         },
         'skyworth-report': {
             'title': '创维财报分析',
@@ -62,6 +66,7 @@ DEFAULTS = {
             'drops_dir': '/workspace/sdmc_skyworth/skyworth/sync/drops',
             'hosted_html': '/workspace/feishu/relay/hosted/skyworth-report.html',
             'legacy_unlabelled_ver': [],
+            'derek_confirmed': False,
         },
     },
 }
@@ -136,6 +141,29 @@ def rep_for_token(file_token):
         if file_token and file_token in (r.get('drive_file_token'), r.get('report_docx_token')):
             return k
     return None
+
+
+class GateClosed(RuntimeError):
+    pass
+
+
+def live_gate(rep=None):
+    """None if a live Feishu write for `rep` (None = not report-specific, e.g. inbox) is allowed, else why not."""
+    if not load().get('feishu_live_writes'):
+        return 'feishu_live_writes is off (group gate: waiting on Derek)'
+    if rep is not None:
+        r = reports().get(rep)
+        if r is None:
+            return 'unknown report %s' % rep
+        if not r.get('derek_confirmed'):
+            return 'report %s not confirmed by Derek (derek_confirmed=false)' % rep
+    return None
+
+
+def require_live(rep=None, what='Feishu write'):
+    why = live_gate(rep)
+    if why:
+        raise GateClosed('%s refused: %s' % (what, why))
 
 
 def legacy_rep(ver):

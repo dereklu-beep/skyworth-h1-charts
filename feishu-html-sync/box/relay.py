@@ -187,6 +187,9 @@ def append_inbox(text, batch=50):
     tok = config.get('inbox_docx_token')
     if not tok:
         return {'skipped': True}
+    gate = config.live_gate(None)
+    if gate:
+        return {'skipped': 'gated', 'why': gate}
     import requests
     import feishu_auth
     kids, codes = inbox_children(text), []
@@ -255,6 +258,14 @@ class Pipeline:
         if not res.get('written'):
             return res
         res['drive'] = res['docx'] = None
+        gate = config.live_gate(rep)
+        if gate:
+            res['drive'] = self.step([os.path.join(HERE, 'replace.py'), '--rep', rep, '--publish-only', r['master_html']])
+            for pid in ids:
+                write_status(pid, stage='gated', gate=gate, drive=res['drive'])
+            log('%s applied to box master; Feishu write gated: %s' % (rep, gate))
+            res['gated'] = gate
+            return res
         if config.get('push_drive') and r.get('drive_file_token'):
             res['drive'] = self.step([os.path.join(HERE, 'replace.py'), '--rep', rep, r['drive_file_token'], r['master_html']])
         else:
@@ -269,6 +280,8 @@ class Pipeline:
     @staticmethod
     def step(args):
         p = subprocess.run([sys.executable] + args, capture_output=True, text=True, timeout=600)
+        if p.returncode == 3:
+            return 'gated: ' + ((p.stderr or p.stdout).strip().splitlines() or ['?'])[-1][:200]
         if p.returncode != 0:
             log('step failed %s: %s' % (os.path.basename(args[0]), (p.stderr or p.stdout)[-300:]))
             return 'error: ' + ((p.stderr or p.stdout).strip().splitlines() or ['?'])[-1][:200]

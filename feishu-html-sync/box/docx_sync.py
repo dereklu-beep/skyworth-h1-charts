@@ -227,8 +227,8 @@ def docx_units(blocks):
 # ───────────────────────── Feishu API (user identity) ─────────────────────────
 
 class FeishuDocx:
-    def __init__(self, headers=None, min_interval=0.4):
-        self._h = headers
+    def __init__(self, headers=None, min_interval=0.4, rep=None):
+        self._h, self.rep = headers, rep
         self.min_interval, self._last = min_interval, 0.0
 
     def _headers(self):
@@ -238,6 +238,8 @@ class FeishuDocx:
         return feishu_auth.headers('user')
 
     def _call(self, method, path, params=None, body=None, write=False):
+        if write:
+            config.require_live(self.rep, 'docx %s %s' % (method, path))
         import requests
         for attempt in range(5):
             if write:
@@ -506,7 +508,7 @@ def _apply(api, doc, reqs, inserts, deletes, blocks):
 
 
 def sync(doc, html_src, api=None, dry=False, init=False, push_diffs=False, allow_delete=False, roots=('doc',)):
-    api = api or FeishuDocx()
+    api = api or FeishuDocx(rep=config.rep_for_token(doc) or 'unregistered:' + doc)
     if not doc:
         raise SystemExit('no docx token: set report_docx_token in sync_config.json (never auto-created)')
     blocks = api.list_blocks(doc)
@@ -633,4 +635,8 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except config.GateClosed as e:
+        print('GATED', e, file=sys.stderr)
+        raise SystemExit(3)

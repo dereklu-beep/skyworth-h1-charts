@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="report-name" content="{{NAME}}">
+<meta name="report-version" content="{{VERSION}}">
+<meta name="report-id" content="{{REPORT_ID}}">
+<meta name="sync-edge" content="{{SYNC_EDGE}}">
+<meta name="sync-rev" content="">
+<meta name="generator" content="研究简报模板 html-report-template v1">
+<title>{{TITLE}}</title>
+<style>
+/*@@CSS@@*/
+</style>
+</head>
+<body>
+<a class="skip" href="#doc">跳到正文</a>
+<header class="masthead">
+  <div class="in">
+    <div class="bar">
+      <a class="bar-title" href="#top">{{SHORT_TITLE}}<small>{{BAR_SUB}}</small></a>
+      <span class="save-state" id="saveState" aria-live="polite"></span>
+      <div class="tools" role="toolbar" aria-label="报告工具">
+        <button class="btn" id="btnEdit" type="button" aria-pressed="false" title="修改：点击文字或图表数据直接改"><svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg><span class="lbl">修改</span></button>
+        <button class="btn primary" id="btnSync" type="button" hidden title="把修改写回飞书同一链接（Ctrl/⌘+S；Ctrl/⌘+Shift+S 下载改过的页面）"><svg class="i" viewBox="0 0 24 24"><path d="M12 4v10"/><path d="m8 10 4 4 4-4"/><path d="M5 18h14"/></svg><span class="lbl">同步修改</span></button>
+        <button class="btn line" id="btnPrint" type="button" title="打印或导出 PDF"><svg class="i" viewBox="0 0 24 24"><path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg><span class="lbl">打印</span></button>
+      </div>
+    </div>
+    <nav class="toc" aria-label="章节目录"><ol id="toc"></ol></nav>
+  </div>
+  <div class="progress" aria-hidden="true"><i id="progress"></i></div>
+</header>
+<main id="top">
+<!--COVER:BEGIN-->
+{{COVER}}
+<!--COVER:END-->
+<article class="doc grid" id="doc">
+<!--DOC:BEGIN-->
+{{DOC}}
+<!--DOC:END-->
+</article>
+<footer class="colophon grid"><p>{{COLOPHON}}</p></footer>
+</main>
+<script type="application/json" id="report-data">
+{{DATA}}
+</script>
+<script>
+/*@@ECHARTS@@*/
+</script>
+<script>
+/*@@APP@@*/
+</script>
+</body>
+</html>
