@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="report-name" content="skyworth-report">
+<meta name="report-version" content="v0-shell">
+<meta name="report-edited" content="">
+<title>创维财报分析</title>
+<style>
+:root{
+  --paper:#F6F3EC; --sheet:#FFFDF8; --ink:#1B1A17; --ink2:#4A463E; --ink3:#6E685C;
+  --rule:#DDD6C8; --rule2:#EAE4D8;
+  --sky:#1F5F7A; --sky-soft:#DDEAF0; --sdmc:#B4442C; --sdmc-soft:#F4E3DD;
+  --inf:#9A5B00; --inf-soft:#FBEFD9; --tbd:#5A5853; --tbd-soft:#EFEDE8;
+  --sans:"PingFang SC","Noto Sans SC","Noto Sans CJK SC","Microsoft YaHei","Hiragino Sans GB",system-ui,sans-serif;
+  --serif:"Songti SC","Noto Serif SC","Noto Serif CJK SC","STSong","SimSun",serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--paper);scroll-padding-top:120px}
+body{margin:0;font:13px/1.6 var(--sans);color:var(--ink);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.skip{position:absolute;left:-999px}.skip:focus{left:12px;top:12px;z-index:99;background:#fff;padding:6px 10px}
+
+/* masthead */
+.masthead{position:sticky;top:0;z-index:30;background:rgba(255,253,248,.97);border-bottom:1px solid var(--rule);backdrop-filter:blur(4px)}
+.masthead .in{max-width:min(1520px,96vw);margin:0 auto;padding:8px 40px 0}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.bar-title{font:700 15px/1.2 var(--serif);color:var(--ink);text-decoration:none;margin-right:auto}
+.bar-title small{font:500 12px var(--sans);color:var(--ink3);margin-left:8px}
+.sw{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.sw .swl{font:600 12px/1 var(--sans);color:var(--ink3);padding:7px 6px 7px 9px;background:#fff}
+.sw button{font:600 12px/1 var(--sans);border:0;border-left:1px solid var(--rule2);background:#fff;color:var(--ink2);padding:7px 10px;cursor:pointer}
+.sw button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.save-state{font-size:12px;color:var(--ink3);min-width:1px}
+.tools{display:flex;gap:6px}
+.btn{font:600 12.5px/1 var(--sans);border:1px solid var(--ink);background:var(--sheet);color:var(--ink);padding:8px 12px;border-radius:6px;cursor:pointer}
+.btn:hover{background:var(--ink);color:#fff}
+.btn.primary{background:var(--sky);border-color:var(--sky);color:#fff}
+.btn.primary:hover{background:#174A60}
+.btn[aria-pressed="true"]{background:var(--ink);color:#fff}
+.btn:focus-visible,.sw button:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+.toc{display:flex;gap:0;overflow-x:auto;padding:6px 0 7px;font-size:12.5px;scrollbar-width:thin}
+.toc a{color:var(--ink2);text-decoration:none;padding:4px 8px;border-radius:4px;white-space:nowrap}
+.toc a:hover{background:var(--rule2);color:var(--ink)}
+.toc a[aria-current="true"]{background:var(--sky-soft);color:var(--sky)}
+.toc a.tp{font-weight:700;color:var(--ink3);padding-left:12px}
+.toc a.cmp{color:var(--sdmc)}
+
+.editbar{max-width:min(1520px,96vw);margin:10px auto 0;padding:9px 40px;background:var(--ink);color:#fff;font-size:12px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;border-radius:4px}
+.editbar b{color:#fff}
+.editbar .cnt{color:#E9DFC8}
+.editbar button{font:600 12px/1 var(--sans);border:1px solid #fff;background:transparent;color:#fff;padding:6px 10px;border-radius:5px;cursor:pointer}
+.editbar button:hover{background:#fff;color:var(--ink)}
+
+/* sheet */
+.sheet{max-width:min(1520px,96vw);margin:14px auto 40px;background:var(--sheet);padding:24px 40px 28px;box-shadow:0 1px 2px rgba(40,30,10,.06),0 12px 40px rgba(40,30,10,.08)}
+.cover{display:grid;grid-template-columns:1fr auto;gap:18px 28px;align-items:end;border-bottom:2px solid var(--ink);padding-bottom:14px}
+h1{font:700 30px/1.2 var(--serif);margin:0;letter-spacing:-.01em;color:var(--sky)}
+.subt{font:600 15px/1.4 var(--serif);margin:6px 0 0;color:var(--ink)}
+.meta{color:var(--ink2);font-size:12px;margin:6px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink2);justify-content:flex-end;max-width:520px;margin:0;padding:0;list-style:none}
+.legend li{display:inline-flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+.t{display:inline-block;font:600 11.5px/1 var(--sans);padding:3px 5px 2px;border-radius:3px;vertical-align:1px;white-space:nowrap;margin-left:3px}
+.t.f{background:var(--ink);color:#fff}
+.t.c{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.t.i{background:var(--inf-soft);color:var(--inf);box-shadow:inset 0 0 0 1px #E2C089}
+.nd{display:inline-block;font:600 12px/1 var(--sans);padding:3px 5px 2px;border-radius:3px;background:#F0EEE8;color:#6E685C;box-shadow:inset 0 0 0 1px #C9C5BC;white-space:nowrap}
+.tbd{color:var(--tbd);background:var(--tbd-soft);padding:1px 6px;border-radius:3px;font-style:normal}
+td .tbd{white-space:nowrap}
+.cal{display:inline-block;font:600 11px/1 var(--sans);padding:2px 4px;border-radius:3px;background:#EFE8DA;color:#6B5A3A;margin-left:4px;vertical-align:2px;white-space:nowrap}
+.cal.os{background:var(--sky-soft);color:var(--sky)}
+.cal.px{background:#F1E6EE;color:#7A3F66}
+
+/* parts and sections */
+.part{margin:30px 0 0;padding:10px 0 8px;border-top:3px double var(--ink);font:700 14px/1.3 var(--sans);letter-spacing:.04em;color:var(--ink3)}
+.part.cmp{color:var(--sdmc)}
+section.blk{padding-top:20px;margin-top:16px;border-top:1px solid var(--rule)}
+section.blk>h2{font:700 19px/1.3 var(--serif);margin:0 0 4px}
+section.co-k{border-left:3px solid var(--sky);padding-left:16px}
+section.co-x{border-left:3px solid var(--sdmc);padding-left:16px}
+.lede{margin:0 0 12px;color:var(--ink2);max-width:92ch}
+h3{font:700 13.5px/1.4 var(--sans);margin:14px 0 6px}
+.concl{margin:10px 0 0;padding-left:22px}
+.concl li{margin:0 0 8px;font-size:14.5px;line-height:1.6}
+
+/* data left, note right */
+.duo{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:16px 28px;margin:6px 0 14px;align-items:start}
+.duo-r{padding-top:2px}
+.judg{border-left:2px solid var(--rule);padding-left:14px}
+.judg p{margin:0 0 8px}
+.jl{color:var(--ink)}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.d{width:100%;border-collapse:collapse;font-size:12px}
+table.d caption{caption-side:top;text-align:left;font:700 12.5px var(--sans);padding:0 0 6px;color:var(--ink)}
+table.d th{font-weight:600;text-align:left;color:var(--ink2);border-bottom:1.5px solid var(--ink);padding:5px 6px;vertical-align:bottom}
+table.d td{border-bottom:1px solid var(--rule2);padding:5px 6px;vertical-align:top}
+table.d td:first-child{position:sticky;left:0;background:var(--sheet);min-width:9em}
+table.d th:first-child{position:sticky;left:0;background:var(--sheet)}
+table.d .num{text-align:right;white-space:nowrap}
+table.d tr.grp td{background:#F4F0E7;font-weight:700}
+table.d tr.side-k td:first-child{box-shadow:inset 3px 0 0 var(--sky)}
+table.d tr.side-s td:first-child{box-shadow:inset 3px 0 0 var(--sdmc)}
+table.d th.side-k{color:var(--sky)} table.d th.side-s{color:var(--sdmc)}
+.src{margin:4px 0 0;font-size:12px;color:var(--ink3)}
+.note{font-size:12px;color:var(--ink3)}
+ul.ev{margin:0;padding-left:18px}
+ul.ev li{margin:0 0 6px}
+.k{color:var(--sky)} .s{color:var(--sdmc)}
+.opt{font:600 11px/1 var(--sans);color:var(--ink3);border:1px dashed var(--ink3);border-radius:3px;padding:2px 5px;margin-left:8px;vertical-align:3px}
+
+/* compare switch: rows/columns carry side-k or side-s */
+body[data-side="k"] .side-s,body[data-side="s"] .side-k{display:none}
+
+/* method / footer */
+.method dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:6px 0 0}
+.method dt{font-weight:700}
+.method dd{margin:0;color:var(--ink2)}
+footer.colophon{max-width:min(1520px,96vw);margin:0 auto 30px;padding:0 40px;font-size:12px;color:var(--ink3)}
+
+/* edit mode */
+body.editing [contenteditable="true"]{outline:1px dashed #9DB8C6;outline-offset:1px;cursor:text}
+body.editing [contenteditable="true"]:focus{outline:2px solid var(--sky);background:#F3F8FA}
+body.editing .tbd{background:#FFF3C4;color:#6B5200}
+body.showtbd .tbd{background:#FFE08A;color:#4A3800;box-shadow:0 0 0 2px #F2C230}
+td.mismatch{background:#FCE4DF!important;box-shadow:inset 0 0 0 1px var(--sdmc)}
+.warn-angle{box-shadow:0 0 0 2px #E0A100!important}
+#syncBox{position:fixed;inset:auto 18px 18px auto;width:min(560px,92vw);background:#fff;border:1px solid var(--ink);border-radius:8px;padding:14px;z-index:60;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+#syncBox p{margin:0 0 8px;font-size:12.5px}
+#syncBox textarea{width:100%;height:140px;font:12px/1.4 ui-monospace,Menlo,monospace}
+#syncBox .row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+
+@media (max-width:980px){
+  .masthead .in,.sheet,.editbar,footer.colophon{padding-left:16px;padding-right:16px}
+  .cover{grid-template-columns:1fr}.legend{justify-content:flex-start}
+  .duo{grid-template-columns:minmax(0,1fr)}
+}
+@media print{
+  .masthead,.editbar,#syncBox{display:none!important}
+  html,body{background:#fff}.sheet{box-shadow:none;margin:0;max-width:none}
+  section.blk{break-inside:avoid-page}
+}
+</style>
+</head>
+<body data-view="all" data-side="both">
+<a class="skip" href="#doc">跳到正文</a>
+<header class="masthead">
+  <div class="in">
+    <div class="bar">
+      <a class="bar-title" href="#top">创维财报分析<small>骨架 v0</small></a>
+      <div class="sw viewsw" role="group" aria-label="视图"><span class="swl">视图</span><button type="button" data-view="all" aria-pressed="true">全部</button><button type="button" data-view="k" aria-pressed="false">创维本体</button><button type="button" data-view="cmp" aria-pressed="false">海外对比</button></div>
+      <div class="sw cmpsw" role="group" aria-label="对比侧"><span class="swl">对比</span><button type="button" data-side="both" aria-pressed="true">两家</button><button type="button" data-side="k" aria-pressed="false">只看创维</button><button type="button" data-side="s" aria-pressed="false">只看华曦达</button></div>
+      <span class="save-state" id="saveState" aria-live="polite"></span>
+      <div class="tools" role="toolbar" aria-label="报告工具">
+        <button class="btn" id="btnEdit" type="button" aria-pressed="false" title="打开后可直接改标题、段落、表格和数字；改动存在本机浏览器"><span class="lbl">修改</span></button>
+        <button class="btn primary" id="btnSync" type="button" hidden title="同步修改（Ctrl/⌘+S）；同步通道在创维新飞书链接建立后接入"><span class="lbl">同步修改</span></button>
+        <button class="btn" id="btnPrint" type="button" title="打印或导出 PDF"><span class="lbl">打印</span></button>
+      </div>
+    </div>
+    <nav class="toc" id="toc" aria-label="章节目录"><a href="#s-concl" data-part="k" data-eid="toc.1">核心结论</a><a href="#p-k" data-part="k" class="tp" data-eid="toc.2">前半｜创维</a><a href="#s-k-ops" data-part="k" data-eid="toc.3">利润表</a><a href="#s-k-prod" data-part="k" data-eid="toc.4">产品毛利</a><a href="#s-k-region" data-part="k" data-eid="toc.5">地区与海外</a><a href="#s-k-cf" data-part="k" data-eid="toc.6">现金流</a><a href="#s-k-inv" data-part="k" data-eid="toc.7">存货成本</a><a href="#s-k-cust" data-part="k" data-eid="toc.8">客户</a><a href="#s-k-supp" data-part="k" data-eid="toc.9">供应商</a><a href="#s-k-debt" data-part="k" data-eid="toc.10">有息负债</a><a href="#s-k-eq" data-part="k" data-eid="toc.11">股权</a><a href="#p-cmp" data-part="cmp" class="tp cmp" data-eid="toc.12">后半｜海外对比</a><a href="#s-cmp-intro" data-part="cmp" class="cmp" data-eid="toc.13">对比导读</a><a href="#s-cmp-region" data-part="cmp" class="cmp" data-eid="toc.14">海外收入</a><a href="#s-cmp-cust" data-part="cmp" class="cmp" data-eid="toc.15">海外客户</a><a href="#s-cmp-prod" data-part="cmp" class="cmp" data-eid="toc.16">产品毛利</a><a href="#s-cmp-wc" data-part="cmp" class="cmp" data-eid="toc.17">营运资金</a><a href="#s-cmp-val" data-part="cmp" class="cmp" data-eid="toc.18">估值（可选）</a><a href="#s-method" data-part="both" data-eid="toc.19">口径说明</a></nav>
+  </div>
+</header>
+<div class="editbar" id="editbar" hidden>
+  <span><b>修改模式：</b>点击标题、段落、表格格子直接改写；改动自动存在本机浏览器。比较请写「低于／超过」，不要用尖括号。</span>
+  <span class="cnt" id="cntTbd"></span>
+  <button type="button" id="btnTbd" aria-pressed="false">标出待填</button>
+  <button type="button" id="btnDownload">下载改过的页面</button>
+  <button type="button" id="btnReset">清除本机修改</button>
+</div>
+<main class="sheet" id="top">
+<section class="cover" id="s-cover" data-part="both">
+  <div>
+    <h1 data-eid="s-cover.1">创维财报分析</h1>
+    <p class="subt" data-eid="s-cover.2"><span class="tbd">待定：主体全称与股票代码</span>｜<span class="tbd">待定：报告期（如 2026H1）</span></p>
+    <p class="meta" data-eid="s-cover.3">财报分析｜编制 <span class="tbd">待填</span>｜v0 骨架｜金额单位默认亿元人民币，港币／美元单独标注｜会计准则 <span class="tbd">待填</span></p>
+  </div>
+  <ul class="legend" aria-label="图例">
+    <li data-eid="s-cover.4"><b class="t f">事实</b>财报／公告原文</li>
+    <li data-eid="s-cover.5"><b class="t c">计算</b>由披露数推算</li>
+    <li data-eid="s-cover.6"><b class="t i">推断</b>分析判断</li>
+    <li data-eid="s-cover.7"><span class="nd">未披露</span>已查，原文未披露</li>
+    <li data-eid="s-cover.8"><span class="tbd">待填</span>尚未录入</li>
+    <li data-eid="s-cover.9"><span class="cal">全公司合并</span><span class="cal os">海外口径</span><span class="cal px">代理口径</span></li>
+  </ul>
+</section>
+<article class="doc" id="doc">
+
+<!-- 闸门：只写创维；禁止混入华曦达对比句；3～6 条 -->
+<section class="blk " id="s-concl" data-part="k"><h2 data-eid="s-concl.1">核心结论</h2><ol class="concl"><li data-eid="s-concl.2"><b>在做什么：</b><span class="tbd">待写：创维主营与 2026H1 动作，一句结论＋标签</span></li><li data-eid="s-concl.3"><b>钱怎么转：</b><span class="tbd">待写：利润与经营现金流差在哪，指向 B4</span></li><li data-eid="s-concl.4"><b>海外靠什么：</b><span class="tbd">待写：海外收入靠哪些地区／客户／机型，指向 B3</span></li><li data-eid="s-concl.5"><b>风险点是什么：</b><span class="tbd">待写：存货、应收、负债中最需要盯的一项，指向 B5–B8</span></li></ol></section>
+<div class="part" id="p-k" data-part="k" data-eid="p-k.1">前半｜创维本体（海外为重心）</div>
+<!-- 闸门：只分析利润表科目；跨表推导进后文（骨架写 B3，待 Derek 确认） -->
+<section class="blk co-k" id="s-k-ops" data-part="k"><h2 data-eid="s-k-ops.1">1 利润表：经营</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5" id="t-k-ops"><thead><tr><th data-eid="s-k-ops.2">亿元人民币</th><th class="num" data-eid="s-k-ops.3">2024 全年</th><th class="num" data-eid="s-k-ops.4">2025 全年</th><th class="num" data-eid="s-k-ops.5">2025H1</th><th class="num" data-eid="s-k-ops.6">2025H2<br>（计算）</th><th class="num" data-eid="s-k-ops.7">2026H1</th></tr></thead><tbody><tr data-k="ratio"><td data-eid="s-k-ops.8">海外收入占比（若披露，置顶）</td><td class="num" data-eid="s-k-ops.9"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.10"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.11"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.12"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-ops.13"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-ops.14">收入</td><td class="num" data-eid="s-k-ops.15"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.16"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.17"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.18"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-ops.19"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-ops.20">毛利</td><td class="num" data-eid="s-k-ops.21"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.22"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.23"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.24"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-ops.25"><span class="tbd">待填</span></td></tr><tr data-k="ratio"><td data-eid="s-k-ops.26">毛利率<b class="t c">计算</b></td><td class="num" data-eid="s-k-ops.27"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.28"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.29"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.30"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-ops.31"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-ops.32">销售费用</td><td class="num" data-eid="s-k-ops.33"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.34"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.35"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.36"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-ops.37"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-ops.38">管理费用</td><td class="num" data-eid="s-k-ops.39"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.40"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.41"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.42"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-ops.43"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-ops.44">研发费用</td><td class="num" data-eid="s-k-ops.45"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.46"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.47"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.48"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-ops.49"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-ops.50">经营利润</td><td class="num" data-eid="s-k-ops.51"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.52"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.53"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.54"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-ops.55"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-ops.56">归母净利润</td><td class="num" data-eid="s-k-ops.57"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.58"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.59"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.60"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-ops.61"><span class="tbd">待填</span></td></tr><tr data-k="ratio"><td data-eid="s-k-ops.62">归母净利率<b class="t c">计算</b></td><td class="num" data-eid="s-k-ops.63"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.64"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.65"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-ops.66"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-ops.67"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-ops.68">来源：<span class="tbd">待填：创维 2026 中报／年报 利润表</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-k-ops.69"><b class="jl">备注：</b><span class="tbd">待写：收入、毛利、归母关键数＋同比／环比完整短句；海外收入占比若披露则先写</span></p><p data-eid="s-k-ops.70"><span class="tbd">待写：只分析利润表科目；跨表推导放后文对应章节</span></p></div></div></div></section>
+<!-- 闸门：简单点用句子，不拆无桥表；海外机型／解决方案单列 -->
+<section class="blk co-k" id="s-k-prod" data-part="k"><h2 data-eid="s-k-prod.1">2 产品与毛利率</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5" id="t-k-prod"><thead><tr><th data-eid="s-k-prod.2">亿元人民币</th><th class="num" data-eid="s-k-prod.3">2024 全年</th><th class="num" data-eid="s-k-prod.4">2025 全年</th><th class="num" data-eid="s-k-prod.5">2025H1</th><th class="num" data-eid="s-k-prod.6">2025H2<br>（计算）</th><th class="num" data-eid="s-k-prod.7">2026H1</th></tr></thead><tbody><tr class="grp"><td colspan="6" data-eid="s-k-prod.8">收入</td></tr><tr data-k="amt"><td data-eid="s-k-prod.9">【产品线 A，按主体分部披露命名】</td><td class="num" data-eid="s-k-prod.10"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.11"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.12"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.13"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-prod.14"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-prod.15">【产品线 B】</td><td class="num" data-eid="s-k-prod.16"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.17"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.18"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.19"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-prod.20"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-prod.21">【产品线 C】</td><td class="num" data-eid="s-k-prod.22"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.23"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.24"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.25"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-prod.26"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-prod.27">海外相关机型／解决方案（单列，若披露）</td><td class="num" data-eid="s-k-prod.28"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.29"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.30"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.31"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-prod.32"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-prod.33">合计</td><td class="num" data-eid="s-k-prod.34"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.35"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.36"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.37"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-prod.38"><span class="tbd">待填</span></td></tr><tr class="grp"><td colspan="6" data-eid="s-k-prod.39">毛利率</td></tr><tr data-k="ratio"><td data-eid="s-k-prod.40">【产品线 A】毛利率</td><td class="num" data-eid="s-k-prod.41"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.42"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.43"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.44"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-prod.45"><span class="tbd">待填</span></td></tr><tr data-k="ratio"><td data-eid="s-k-prod.46">【产品线 B】毛利率</td><td class="num" data-eid="s-k-prod.47"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.48"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.49"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.50"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-prod.51"><span class="tbd">待填</span></td></tr><tr data-k="ratio"><td data-eid="s-k-prod.52">【产品线 C】毛利率</td><td class="num" data-eid="s-k-prod.53"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.54"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.55"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.56"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-prod.57"><span class="tbd">待填</span></td></tr><tr data-k="ratio"><td data-eid="s-k-prod.58">海外相关机型／解决方案毛利率</td><td class="num" data-eid="s-k-prod.59"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.60"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.61"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-prod.62"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-prod.63"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-prod.64">来源：<span class="tbd">待填：分产品／业务线收入与毛利率披露</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-k-prod.65"><b class="jl">备注：</b><span class="tbd">待写：毛利率变化一两句说清来自哪条线；简单的用句子，不拆无桥表</span></p></div></div></div></section>
+<!-- 闸门：本报重心；ATVG／亚太机型等事件包落此 -->
+<section class="blk co-k" id="s-k-region" data-part="k"><h2 data-eid="s-k-region.1">3 地区与海外口径</h2><p class="lede" data-eid="s-k-region.2"><span class="tbd">待写：一句话交代本报重心为海外；官方口径与还原口径分开列。</span></p><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5" id="t-k-region"><caption data-eid="s-k-region.3">官方地区收入<span class="cal">全公司合并</span></caption><thead><tr><th data-eid="s-k-region.4">亿元人民币</th><th class="num" data-eid="s-k-region.5">2024 全年</th><th class="num" data-eid="s-k-region.6">2025 全年</th><th class="num" data-eid="s-k-region.7">2025H1</th><th class="num" data-eid="s-k-region.8">2025H2<br>（计算）</th><th class="num" data-eid="s-k-region.9">2026H1</th></tr></thead><tbody><tr data-k="amt"><td data-eid="s-k-region.10">境内收入</td><td class="num" data-eid="s-k-region.11"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.12"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.13"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.14"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-region.15"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-region.16">境外收入</td><td class="num" data-eid="s-k-region.17"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.18"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.19"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.20"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-region.21"><span class="tbd">待填</span></td></tr><tr data-k="ratio"><td data-eid="s-k-region.22">境外收入占比<b class="t c">计算</b></td><td class="num" data-eid="s-k-region.23"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.24"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.25"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.26"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-region.27"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-region.28">亚太（若披露）</td><td class="num" data-eid="s-k-region.29"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.30"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.31"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.32"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-region.33"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-region.34">欧洲（若披露）</td><td class="num" data-eid="s-k-region.35"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.36"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.37"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.38"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-region.39"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-region.40">美洲（若披露）</td><td class="num" data-eid="s-k-region.41"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.42"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.43"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.44"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-region.45"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-region.46">其他地区（若披露）</td><td class="num" data-eid="s-k-region.47"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.48"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.49"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.50"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-region.51"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-region.87">来源：<span class="tbd">待填：年报／中报 地区分部</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-k-region.88"><b class="jl">口径：</b><span class="tbd">待写：官方地区口径与还原口径的差别，一句；两套口径不相加</span></p><p data-eid="s-k-region.89"><span class="tbd">待写：海外增长来自哪里：地区、客户、机型各一句</span></p></div></div></div><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5" id="t-k-region2"><caption data-eid="s-k-region.52">按终端／运营商可还原口径<span class="cal os">海外口径</span><span class="cal px">代理口径</span></caption><thead><tr><th data-eid="s-k-region.53">亿元人民币</th><th class="num" data-eid="s-k-region.54">2024 全年</th><th class="num" data-eid="s-k-region.55">2025 全年</th><th class="num" data-eid="s-k-region.56">2025H1</th><th class="num" data-eid="s-k-region.57">2025H2<br>（计算）</th><th class="num" data-eid="s-k-region.58">2026H1</th></tr></thead><tbody><tr data-k="amt"><td data-eid="s-k-region.59">亚太（还原口径）</td><td class="num" data-eid="s-k-region.60"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.61"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.62"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.63"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-region.64"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-region.65">欧洲（还原口径）</td><td class="num" data-eid="s-k-region.66"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.67"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.68"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.69"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-region.70"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-region.71">美洲（还原口径）</td><td class="num" data-eid="s-k-region.72"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.73"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.74"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.75"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-region.76"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-region.77">中东及非洲（还原口径）</td><td class="num" data-eid="s-k-region.78"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.79"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.80"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-region.81"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-region.82"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-region.90">来源：<span class="tbd">待填：事件研究员事实包（运营商公告、招标、客户披露）</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-k-region.91"><b class="jl">备注：</b><span class="tbd">待写：还原方法一句；Derek 已手填的代理口径格保留，旁注代理口径</span></p></div></div></div><div class="duo"><div class="duo-l"><h3 data-eid="s-k-region.83">事件：ATVG／亚太机型等</h3><ul class="ev"><li data-eid="s-k-region.84"><span class="tbd">待写：事件名｜时间｜出处｜对收入或毛利的含义（一句）＋标签</span></li><li data-eid="s-k-region.85"><span class="tbd">待写：事件名｜时间｜出处｜对收入或毛利的含义（一句）＋标签</span></li><li data-eid="s-k-region.86"><span class="tbd">待写：事件名｜时间｜出处｜对收入或毛利的含义（一句）＋标签</span></li></ul></div><div class="duo-r"><div class="judg"><p data-eid="s-k-region.92"><span class="tbd">待写：事件包优先来自事件研究员；无原文的不写</span></p></div></div></div></section>
+<!-- 闸门：三步：营运资金 → 经营现金流 → 资金来源；不写预测融资场景 -->
+<section class="blk co-k" id="s-k-cf" data-part="k"><h2 data-eid="s-k-cf.1">4 现金流逻辑</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5" id="t-k-cf"><thead><tr><th data-eid="s-k-cf.2">亿元人民币</th><th class="num" data-eid="s-k-cf.3">2024 全年</th><th class="num" data-eid="s-k-cf.4">2025 全年</th><th class="num" data-eid="s-k-cf.5">2025H1</th><th class="num" data-eid="s-k-cf.6">2025H2<br>（计算）</th><th class="num" data-eid="s-k-cf.7">2026H1</th></tr></thead><tbody><tr data-k="amt"><td data-eid="s-k-cf.8">归母净利润</td><td class="num" data-eid="s-k-cf.9"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.10"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.11"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.12"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cf.13"><span class="tbd">待填</span></td></tr><tr class="grp"><td colspan="6" data-eid="s-k-cf.14">营运资金变动</td></tr><tr data-k="amt"><td data-eid="s-k-cf.15">存货变动</td><td class="num" data-eid="s-k-cf.16"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.17"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.18"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.19"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cf.20"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-cf.21">经营性应收变动</td><td class="num" data-eid="s-k-cf.22"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.23"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.24"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.25"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cf.26"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-cf.27">经营性应付变动</td><td class="num" data-eid="s-k-cf.28"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.29"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.30"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.31"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cf.32"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-cf.33">合同负债／预收变动</td><td class="num" data-eid="s-k-cf.34"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.35"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.36"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.37"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cf.38"><span class="tbd">待填</span></td></tr><tr class="grp"><td colspan="6" data-eid="s-k-cf.39">现金流</td></tr><tr data-k="amt"><td data-eid="s-k-cf.40">经营活动现金流净额</td><td class="num" data-eid="s-k-cf.41"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.42"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.43"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.44"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cf.45"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-cf.46">投资活动现金流净额</td><td class="num" data-eid="s-k-cf.47"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.48"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.49"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.50"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cf.51"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-cf.52">筹资活动现金流净额</td><td class="num" data-eid="s-k-cf.53"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.54"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.55"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cf.56"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cf.57"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-cf.61">来源：<span class="tbd">待填：现金流量表及补充资料</span></p></div><div class="duo-r"><div class="judg"><ol class="ev"><li data-eid="s-k-cf.58"><b>营运资金：</b><span class="tbd">待写：哪一项占用或释放了现金</span></li><li data-eid="s-k-cf.59"><b>经营现金流：</b><span class="tbd">待写：与归母净利润的差额及主因</span></li><li data-eid="s-k-cf.60"><b>资金来源：</b><span class="tbd">待写：缺口靠借款、存量现金还是其他补上</span></li></ol></div></div></div></section>
+<!-- 闸门：推导须标计算／推断 -->
+<section class="blk co-k" id="s-k-inv" data-part="k"><h2 data-eid="s-k-inv.1">5 存货与成本</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5 t5b" id="t-k-inv"><thead><tr><th data-eid="s-k-inv.2">亿元人民币（期末）</th><th class="num" data-eid="s-k-inv.3">2024-12-31</th><th class="num" data-eid="s-k-inv.4">2025-12-31</th><th class="num" data-eid="s-k-inv.5">2025-06-30</th><th class="num" data-eid="s-k-inv.6">2025H2 变化<br>（计算）</th><th class="num" data-eid="s-k-inv.7">2026-06-30</th></tr></thead><tbody><tr data-k="amt"><td data-eid="s-k-inv.8">存货账面价值</td><td class="num" data-eid="s-k-inv.9"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.10"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.11"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.12"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-inv.13"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-inv.14">其中：原材料</td><td class="num" data-eid="s-k-inv.15"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.16"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.17"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.18"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-inv.19"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-inv.20">其中：在产品</td><td class="num" data-eid="s-k-inv.21"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.22"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.23"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.24"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-inv.25"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-inv.26">其中：库存商品</td><td class="num" data-eid="s-k-inv.27"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.28"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.29"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.30"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-inv.31"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-inv.32">其中：发出商品</td><td class="num" data-eid="s-k-inv.33"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.34"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.35"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.36"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-inv.37"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-inv.38">存货跌价准备</td><td class="num" data-eid="s-k-inv.39"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.40"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.41"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.42"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-inv.43"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-inv.74">来源：<span class="tbd">待填：存货附注、库龄／跌价</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-k-inv.75"><b class="jl">备注：</b><span class="tbd">待写：存货结构变化一句；库龄与跌价若披露写一句</span></p><p data-eid="s-k-inv.76"><span class="tbd">待写：海外备货若有披露写一句；推导标计算或推断</span></p></div></div></div><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5" id="t-k-cost"><thead><tr><th data-eid="s-k-inv.44">亿元人民币</th><th class="num" data-eid="s-k-inv.45">2024 全年</th><th class="num" data-eid="s-k-inv.46">2025 全年</th><th class="num" data-eid="s-k-inv.47">2025H1</th><th class="num" data-eid="s-k-inv.48">2025H2<br>（计算）</th><th class="num" data-eid="s-k-inv.49">2026H1</th></tr></thead><tbody><tr data-k="amt"><td data-eid="s-k-inv.50">营业成本</td><td class="num" data-eid="s-k-inv.51"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.52"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.53"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.54"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-inv.55"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-inv.56">其中：材料</td><td class="num" data-eid="s-k-inv.57"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.58"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.59"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.60"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-inv.61"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-inv.62">其中：人工及制造费用</td><td class="num" data-eid="s-k-inv.63"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.64"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.65"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.66"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-inv.67"><span class="tbd">待填</span></td></tr><tr data-k="ratio"><td data-eid="s-k-inv.68">存货周转天数<b class="t c">计算</b></td><td class="num" data-eid="s-k-inv.69"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.70"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.71"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-inv.72"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-inv.73"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-inv.77">来源：<span class="tbd">待填：营业成本构成附注</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-k-inv.78"><span class="tbd">待写：成本构成变化对毛利率的含义，一句</span></p></div></div></div></section>
+<!-- 闸门：点名客户；关联方单独小节；与供应商分章 -->
+<section class="blk co-k" id="s-k-cust" data-part="k"><h2 data-eid="s-k-cust.1">6 客户</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5" id="t-k-cust"><thead><tr><th data-eid="s-k-cust.2">亿元人民币</th><th class="num" data-eid="s-k-cust.3">2024 全年</th><th class="num" data-eid="s-k-cust.4">2025 全年</th><th class="num" data-eid="s-k-cust.5">2025H1</th><th class="num" data-eid="s-k-cust.6">2025H2<br>（计算）</th><th class="num" data-eid="s-k-cust.7">2026H1</th></tr></thead><tbody><tr data-k="amt"><td data-eid="s-k-cust.8">前五大客户合计收入</td><td class="num" data-eid="s-k-cust.9"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.10"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.11"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.12"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cust.13"><span class="tbd">待填</span></td></tr><tr data-k="ratio"><td data-eid="s-k-cust.14">前五大客户占比</td><td class="num" data-eid="s-k-cust.15"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.16"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.17"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.18"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cust.19"><span class="tbd">待填</span></td></tr><tr data-k="ratio"><td data-eid="s-k-cust.20">第一大客户占比</td><td class="num" data-eid="s-k-cust.21"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.22"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.23"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.24"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cust.25"><span class="tbd">待填</span></td></tr><tr class="grp"><td colspan="6" data-eid="s-k-cust.26">主要海外客户（点名）</td></tr><tr data-k="amt"><td data-eid="s-k-cust.27">【客户 1，点名】</td><td class="num" data-eid="s-k-cust.28"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.29"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.30"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.31"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cust.32"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-cust.33">【客户 2】</td><td class="num" data-eid="s-k-cust.34"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.35"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.36"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.37"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cust.38"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-cust.39">【客户 3】</td><td class="num" data-eid="s-k-cust.40"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.41"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.42"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.43"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cust.44"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-cust.71">来源：<span class="tbd">待填：年报前五大客户；事件包</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-k-cust.72"><b class="jl">备注：</b><span class="tbd">待写：点名客户、地区与合作内容；客户集中度一句</span></p></div></div></div><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5 t5b" id="t-k-ar"><thead><tr><th data-eid="s-k-cust.45">亿元人民币（期末）</th><th class="num" data-eid="s-k-cust.46">2024-12-31</th><th class="num" data-eid="s-k-cust.47">2025-12-31</th><th class="num" data-eid="s-k-cust.48">2025-06-30</th><th class="num" data-eid="s-k-cust.49">2025H2 变化<br>（计算）</th><th class="num" data-eid="s-k-cust.50">2026-06-30</th></tr></thead><tbody><tr data-k="amt"><td data-eid="s-k-cust.51">应收账款</td><td class="num" data-eid="s-k-cust.52"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.53"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.54"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.55"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cust.56"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-cust.57">合同负债</td><td class="num" data-eid="s-k-cust.58"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.59"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.60"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.61"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cust.62"><span class="tbd">待填</span></td></tr><tr data-k="ratio"><td data-eid="s-k-cust.63">应收账款周转天数<b class="t c">计算</b></td><td class="num" data-eid="s-k-cust.64"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.65"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.66"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-cust.67"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-cust.68"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-cust.73">来源：<span class="tbd">待填：应收、合同负债附注</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-k-cust.74"><span class="tbd">待写：账期与预收的含义一句；共享结论全稿用同一句标准表述</span></p></div></div></div><h3 data-eid="s-k-cust.69">关联方</h3><p data-eid="s-k-cust.70"><span class="tbd">待写：关联交易与关联方余额；无则写一句已查未披露</span></p></section>
+<!-- 闸门：与客户分章，不混写 -->
+<section class="blk co-k" id="s-k-supp" data-part="k"><h2 data-eid="s-k-supp.1">7 供应商</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5" id="t-k-supp"><thead><tr><th data-eid="s-k-supp.2">亿元人民币</th><th class="num" data-eid="s-k-supp.3">2024 全年</th><th class="num" data-eid="s-k-supp.4">2025 全年</th><th class="num" data-eid="s-k-supp.5">2025H1</th><th class="num" data-eid="s-k-supp.6">2025H2<br>（计算）</th><th class="num" data-eid="s-k-supp.7">2026H1</th></tr></thead><tbody><tr data-k="amt"><td data-eid="s-k-supp.8">前五大供应商合计采购</td><td class="num" data-eid="s-k-supp.9"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.10"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.11"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.12"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-supp.13"><span class="tbd">待填</span></td></tr><tr data-k="ratio"><td data-eid="s-k-supp.14">前五大供应商占比</td><td class="num" data-eid="s-k-supp.15"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.16"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.17"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.18"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-supp.19"><span class="tbd">待填</span></td></tr><tr class="grp"><td colspan="6" data-eid="s-k-supp.20">主要供应商（点名）</td></tr><tr data-k="amt"><td data-eid="s-k-supp.21">【供应商 1，点名】</td><td class="num" data-eid="s-k-supp.22"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.23"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.24"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.25"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-supp.26"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-supp.27">【供应商 2】</td><td class="num" data-eid="s-k-supp.28"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.29"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.30"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.31"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-supp.32"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-supp.69">来源：<span class="tbd">待填：年报前五大供应商</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-k-supp.70"><b class="jl">备注：</b><span class="tbd">待写：供应集中度与关键物料一句</span></p></div></div></div><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5 t5b" id="t-k-ap"><thead><tr><th data-eid="s-k-supp.33">亿元人民币（期末）</th><th class="num" data-eid="s-k-supp.34">2024-12-31</th><th class="num" data-eid="s-k-supp.35">2025-12-31</th><th class="num" data-eid="s-k-supp.36">2025-06-30</th><th class="num" data-eid="s-k-supp.37">2025H2 变化<br>（计算）</th><th class="num" data-eid="s-k-supp.38">2026-06-30</th></tr></thead><tbody><tr data-k="amt"><td data-eid="s-k-supp.39">应付账款</td><td class="num" data-eid="s-k-supp.40"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.41"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.42"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.43"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-supp.44"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-supp.45">应付票据</td><td class="num" data-eid="s-k-supp.46"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.47"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.48"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.49"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-supp.50"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-supp.51">预付款项</td><td class="num" data-eid="s-k-supp.52"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.53"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.54"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.55"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-supp.56"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-supp.57">受限货币资金</td><td class="num" data-eid="s-k-supp.58"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.59"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.60"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.61"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-supp.62"><span class="tbd">待填</span></td></tr><tr data-k="ratio"><td data-eid="s-k-supp.63">应付账款周转天数<b class="t c">计算</b></td><td class="num" data-eid="s-k-supp.64"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.65"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.66"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-supp.67"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-supp.68"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-supp.71">来源：<span class="tbd">待填：应付、预付、受限资金附注</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-k-supp.72"><span class="tbd">待写：账期、预付与受限资金的含义一句</span></p></div></div></div></section>
+<!-- 闸门：无则短节或并入 B4 -->
+<section class="blk co-k" id="s-k-debt" data-part="k"><h2 data-eid="s-k-debt.1">8 有息负债与财务成本</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5 t5b" id="t-k-debt"><thead><tr><th data-eid="s-k-debt.2">亿元人民币（期末）</th><th class="num" data-eid="s-k-debt.3">2024-12-31</th><th class="num" data-eid="s-k-debt.4">2025-12-31</th><th class="num" data-eid="s-k-debt.5">2025-06-30</th><th class="num" data-eid="s-k-debt.6">2025H2 变化<br>（计算）</th><th class="num" data-eid="s-k-debt.7">2026-06-30</th></tr></thead><tbody><tr data-k="amt"><td data-eid="s-k-debt.8">短期借款</td><td class="num" data-eid="s-k-debt.9"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.10"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.11"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.12"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-debt.13"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-debt.14">一年内到期的非流动负债</td><td class="num" data-eid="s-k-debt.15"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.16"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.17"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.18"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-debt.19"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-debt.20">长期借款</td><td class="num" data-eid="s-k-debt.21"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.22"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.23"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.24"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-debt.25"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-debt.26">货币资金</td><td class="num" data-eid="s-k-debt.27"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.28"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.29"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.30"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-debt.31"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-debt.32">其中：受限</td><td class="num" data-eid="s-k-debt.33"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.34"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.35"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.36"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-debt.37"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-debt.56">来源：<span class="tbd">待填：借款与货币资金附注</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-k-debt.57"><b class="jl">备注：</b><span class="tbd">待写：有息负债与存款对比一句；利率若披露写一句</span></p></div></div></div><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5" id="t-k-fin"><thead><tr><th data-eid="s-k-debt.38">亿元人民币</th><th class="num" data-eid="s-k-debt.39">2024 全年</th><th class="num" data-eid="s-k-debt.40">2025 全年</th><th class="num" data-eid="s-k-debt.41">2025H1</th><th class="num" data-eid="s-k-debt.42">2025H2<br>（计算）</th><th class="num" data-eid="s-k-debt.43">2026H1</th></tr></thead><tbody><tr data-k="amt"><td data-eid="s-k-debt.44">利息费用</td><td class="num" data-eid="s-k-debt.45"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.46"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.47"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.48"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-debt.49"><span class="tbd">待填</span></td></tr><tr data-k="amt"><td data-eid="s-k-debt.50">利息收入</td><td class="num" data-eid="s-k-debt.51"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.52"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.53"><span class="tbd">待填</span></td><td class="num" data-eid="s-k-debt.54"><span class="tbd">待算</span></td><td class="num" data-eid="s-k-debt.55"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-k-debt.58">来源：<span class="tbd">待填：财务费用附注</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-k-debt.59"><span class="tbd">待写：无有息负债则本节缩成一句或并入现金流逻辑</span></p></div></div></div></section>
+<!-- 闸门：仅创维侧必要股东／上市架构；不复制华曦达股权长文 -->
+<section class="blk co-k" id="s-k-eq" data-part="k"><h2 data-eid="s-k-eq.1">9 股权与资本结构</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d" id="t-k-eq"><thead><tr><th data-eid="s-k-eq.14">项目</th><th data-eid="s-k-eq.15">内容</th><th data-eid="s-k-eq.16">出处</th></tr></thead><tbody><tr><td data-eid="s-k-eq.2">控股股东</td><td data-eid="s-k-eq.3"><span class="tbd">待填</span></td><td data-eid="s-k-eq.4"><span class="tbd">待填</span></td></tr><tr><td data-eid="s-k-eq.5">实际控制人</td><td data-eid="s-k-eq.6"><span class="tbd">待填</span></td><td data-eid="s-k-eq.7"><span class="tbd">待填</span></td></tr><tr><td data-eid="s-k-eq.8">上市地与代码</td><td data-eid="s-k-eq.9"><span class="tbd">待填</span></td><td data-eid="s-k-eq.10"><span class="tbd">待填</span></td></tr><tr><td data-eid="s-k-eq.11">总股本</td><td data-eid="s-k-eq.12"><span class="tbd">待填</span></td><td data-eid="s-k-eq.13"><span class="tbd">待填</span></td></tr></tbody></table></div></div><div class="duo-r"><div class="judg"><p data-eid="s-k-eq.17"><b class="jl">备注：</b><span class="tbd">待写：只写创维侧必要股东与上市架构；无硬事实可整节极简</span></p></div></div></div></section>
+<div class="part cmp" id="p-cmp" data-part="cmp" data-eid="p-cmp.1">后半｜华曦达 × 创维：海外对比</div>
+<!-- 闸门：开篇一句界定，避免回灌华曦达财务长文 -->
+<section class="blk co-x" id="s-cmp-intro" data-part="cmp"><h2 data-eid="s-cmp-intro.1">10 对比导读</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d" id="t-cmp-scope"><thead><tr><th data-eid="s-cmp-intro.14">对比项</th><th class="side-k" data-eid="s-cmp-intro.15">创维出处</th><th class="side-s" data-eid="s-cmp-intro.16">华曦达出处</th></tr></thead><tbody><tr><td data-eid="s-cmp-intro.2">海外收入与地区结构</td><td class="side-k" data-eid="s-cmp-intro.3">本稿 3 地区与海外口径</td><td class="side-s" data-eid="s-cmp-intro.4">「华曦达财报分析」同链</td></tr><tr><td data-eid="s-cmp-intro.5">海外客户与渠道</td><td class="side-k" data-eid="s-cmp-intro.6">本稿 6 客户＋事件包</td><td class="side-s" data-eid="s-cmp-intro.7">「华曦达财报分析」同链</td></tr><tr><td data-eid="s-cmp-intro.8">产品／机型与毛利率</td><td class="side-k" data-eid="s-cmp-intro.9">本稿 2 产品与毛利率</td><td class="side-s" data-eid="s-cmp-intro.10">「华曦达财报分析」同链</td></tr><tr><td data-eid="s-cmp-intro.11">营运资金与账期</td><td class="side-k" data-eid="s-cmp-intro.12">本稿 6、7</td><td class="side-s" data-eid="s-cmp-intro.13">「华曦达财报分析」同链</td></tr></tbody></table></div><p class="note" data-eid="s-cmp-intro.17"><i class="dot" style="background:var(--sky)"></i> 创维　<i class="dot" style="background:var(--sdmc)"></i> 华曦达（数字引自已定稿同链）</p></div><div class="duo-r"><div class="judg"><p data-eid="s-cmp-intro.18"><b class="jl">范围：</b><span class="tbd">待写：一句界定：只比海外收入、客户、机型、毛利、账期；华曦达数字引自已定稿同链，不重开华曦达专章</span></p></div></div></div></section>
+<!-- 闸门：两侧并列五列能齐则齐；齐不了就未披露；华曦达数字从同链引用 -->
+<section class="blk co-x" id="s-cmp-region" data-part="cmp"><h2 data-eid="s-cmp-region.1">11 海外收入与地区结构</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5" id="t-cmp-region"><thead><tr><th data-eid="s-cmp-region.2">亿元人民币</th><th class="num" data-eid="s-cmp-region.3">2024 全年</th><th class="num" data-eid="s-cmp-region.4">2025 全年</th><th class="num" data-eid="s-cmp-region.5">2025H1</th><th class="num" data-eid="s-cmp-region.6">2025H2<br>（计算）</th><th class="num" data-eid="s-cmp-region.7">2026H1</th></tr></thead><tbody><tr class="grp side-k"><td colspan="6" data-eid="s-cmp-region.8">创维</td></tr><tr data-k="amt" class="side-k"><td data-eid="s-cmp-region.9">海外收入</td><td class="num" data-eid="s-cmp-region.10"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-region.11"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-region.12"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-region.13"><span class="tbd">待算</span></td><td class="num" data-eid="s-cmp-region.14"><span class="tbd">待填</span></td></tr><tr data-k="ratio" class="side-k"><td data-eid="s-cmp-region.15">海外收入占比</td><td class="num" data-eid="s-cmp-region.16"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-region.17"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-region.18"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-region.19"><span class="tbd">待算</span></td><td class="num" data-eid="s-cmp-region.20"><span class="tbd">待填</span></td></tr><tr class="grp side-s"><td colspan="6" data-eid="s-cmp-region.21">华曦达（引自同链）</td></tr><tr data-k="amt" class="side-s"><td data-eid="s-cmp-region.22">海外收入</td><td class="num" data-eid="s-cmp-region.23"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-region.24"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-region.25"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-region.26"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-region.27"><span class="tbd">待引</span></td></tr><tr data-k="ratio" class="side-s"><td data-eid="s-cmp-region.28">海外收入占比</td><td class="num" data-eid="s-cmp-region.29"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-region.30"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-region.31"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-region.32"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-region.33"><span class="tbd">待引</span></td></tr></tbody></table></div><p class="src" data-eid="s-cmp-region.34">来源：<span class="tbd">创维：本稿 3；华曦达：「华曦达财报分析」同链</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-cmp-region.35"><b class="jl">对照：</b><span class="tbd">待写：两侧海外规模与增速对比一句，用低于／超过；两侧口径不齐处标未披露</span></p></div></div></div></section>
+<!-- 闸门：运营商／品牌／ODM；事件研究员事实包优先 -->
+<section class="blk co-x" id="s-cmp-cust" data-part="cmp"><h2 data-eid="s-cmp-cust.1">12 海外客户与渠道</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d" id="t-cmp-cust"><thead><tr><th data-eid="s-cmp-cust.18">维度</th><th class="side-k" data-eid="s-cmp-cust.19">创维</th><th class="side-s" data-eid="s-cmp-cust.20">华曦达</th><th data-eid="s-cmp-cust.21">重合与差异</th></tr></thead><tbody><tr><td data-eid="s-cmp-cust.2">运营商客户</td><td class="side-k" data-eid="s-cmp-cust.3"><span class="tbd">待填</span></td><td class="side-s" data-eid="s-cmp-cust.4"><span class="tbd">待引</span></td><td data-eid="s-cmp-cust.5"><span class="tbd">待填</span></td></tr><tr><td data-eid="s-cmp-cust.6">品牌客户</td><td class="side-k" data-eid="s-cmp-cust.7"><span class="tbd">待填</span></td><td class="side-s" data-eid="s-cmp-cust.8"><span class="tbd">待引</span></td><td data-eid="s-cmp-cust.9"><span class="tbd">待填</span></td></tr><tr><td data-eid="s-cmp-cust.10">ODM／渠道</td><td class="side-k" data-eid="s-cmp-cust.11"><span class="tbd">待填</span></td><td class="side-s" data-eid="s-cmp-cust.12"><span class="tbd">待引</span></td><td data-eid="s-cmp-cust.13"><span class="tbd">待填</span></td></tr><tr><td data-eid="s-cmp-cust.14">重合客户</td><td class="side-k" data-eid="s-cmp-cust.15"><span class="tbd">待填</span></td><td class="side-s" data-eid="s-cmp-cust.16"><span class="tbd">待引</span></td><td data-eid="s-cmp-cust.17"><span class="tbd">待填</span></td></tr></tbody></table></div><p class="src" data-eid="s-cmp-cust.22">来源：<span class="tbd">事件研究员事实包优先</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-cmp-cust.23"><b class="jl">对照：</b><span class="tbd">待写：重合客户与各自独有渠道各一句</span></p></div></div></div></section>
+<!-- 闸门：不可比则说明不可比；不写谁会赢 -->
+<section class="blk co-x" id="s-cmp-prod" data-part="cmp"><h2 data-eid="s-cmp-prod.1">13 产品／机型与毛利率</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5" id="t-cmp-prod"><thead><tr><th data-eid="s-cmp-prod.2">亿元人民币</th><th class="num" data-eid="s-cmp-prod.3">2024 全年</th><th class="num" data-eid="s-cmp-prod.4">2025 全年</th><th class="num" data-eid="s-cmp-prod.5">2025H1</th><th class="num" data-eid="s-cmp-prod.6">2025H2<br>（计算）</th><th class="num" data-eid="s-cmp-prod.7">2026H1</th></tr></thead><tbody><tr class="grp side-k"><td colspan="6" data-eid="s-cmp-prod.8">创维</td></tr><tr data-k="amt" class="side-k"><td data-eid="s-cmp-prod.9">【可比产品线】收入</td><td class="num" data-eid="s-cmp-prod.10"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-prod.11"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-prod.12"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-prod.13"><span class="tbd">待算</span></td><td class="num" data-eid="s-cmp-prod.14"><span class="tbd">待填</span></td></tr><tr data-k="ratio" class="side-k"><td data-eid="s-cmp-prod.15">【可比产品线】毛利率</td><td class="num" data-eid="s-cmp-prod.16"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-prod.17"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-prod.18"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-prod.19"><span class="tbd">待算</span></td><td class="num" data-eid="s-cmp-prod.20"><span class="tbd">待填</span></td></tr><tr class="grp side-s"><td colspan="6" data-eid="s-cmp-prod.21">华曦达（引自同链）</td></tr><tr data-k="amt" class="side-s"><td data-eid="s-cmp-prod.22">【可比产品线】收入</td><td class="num" data-eid="s-cmp-prod.23"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-prod.24"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-prod.25"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-prod.26"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-prod.27"><span class="tbd">待引</span></td></tr><tr data-k="ratio" class="side-s"><td data-eid="s-cmp-prod.28">【可比产品线】毛利率</td><td class="num" data-eid="s-cmp-prod.29"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-prod.30"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-prod.31"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-prod.32"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-prod.33"><span class="tbd">待引</span></td></tr></tbody></table></div><p class="src" data-eid="s-cmp-prod.34">来源：<span class="tbd">创维：本稿 2；华曦达：「华曦达财报分析」同链</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-cmp-prod.35"><b class="jl">可比性：</b><span class="tbd">待写：可比产品线对照一句；不可比则写明为什么不可比</span></p><p data-eid="s-cmp-prod.36"><span class="tbd">待写：不写谁会赢</span></p></div></div></div></section>
+<!-- 闸门：一句含义，不堆公式 -->
+<section class="blk co-x" id="s-cmp-wc" data-part="cmp"><h2 data-eid="s-cmp-wc.1">14 营运资金与账期</h2><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d t5 t5b" id="t-cmp-wc"><thead><tr><th data-eid="s-cmp-wc.2">天（期末）</th><th class="num" data-eid="s-cmp-wc.3">2024-12-31</th><th class="num" data-eid="s-cmp-wc.4">2025-12-31</th><th class="num" data-eid="s-cmp-wc.5">2025-06-30</th><th class="num" data-eid="s-cmp-wc.6">2025H2 变化<br>（计算）</th><th class="num" data-eid="s-cmp-wc.7">2026-06-30</th></tr></thead><tbody><tr class="grp side-k"><td colspan="6" data-eid="s-cmp-wc.8">创维</td></tr><tr data-k="ratio" class="side-k"><td data-eid="s-cmp-wc.9">应收账款周转天数<b class="t c">计算</b></td><td class="num" data-eid="s-cmp-wc.10"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-wc.11"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-wc.12"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-wc.13"><span class="tbd">待算</span></td><td class="num" data-eid="s-cmp-wc.14"><span class="tbd">待填</span></td></tr><tr data-k="ratio" class="side-k"><td data-eid="s-cmp-wc.15">应付账款周转天数<b class="t c">计算</b></td><td class="num" data-eid="s-cmp-wc.16"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-wc.17"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-wc.18"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-wc.19"><span class="tbd">待算</span></td><td class="num" data-eid="s-cmp-wc.20"><span class="tbd">待填</span></td></tr><tr data-k="amt" class="side-k"><td data-eid="s-cmp-wc.21">合同负债／预收（亿元人民币）</td><td class="num" data-eid="s-cmp-wc.22"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-wc.23"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-wc.24"><span class="tbd">待填</span></td><td class="num" data-eid="s-cmp-wc.25"><span class="tbd">待算</span></td><td class="num" data-eid="s-cmp-wc.26"><span class="tbd">待填</span></td></tr><tr class="grp side-s"><td colspan="6" data-eid="s-cmp-wc.27">华曦达（引自同链）</td></tr><tr data-k="ratio" class="side-s"><td data-eid="s-cmp-wc.28">应收账款周转天数</td><td class="num" data-eid="s-cmp-wc.29"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-wc.30"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-wc.31"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-wc.32"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-wc.33"><span class="tbd">待引</span></td></tr><tr data-k="ratio" class="side-s"><td data-eid="s-cmp-wc.34">应付账款周转天数</td><td class="num" data-eid="s-cmp-wc.35"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-wc.36"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-wc.37"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-wc.38"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-wc.39"><span class="tbd">待引</span></td></tr><tr data-k="amt" class="side-s"><td data-eid="s-cmp-wc.40">合同负债／预收（亿元人民币）</td><td class="num" data-eid="s-cmp-wc.41"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-wc.42"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-wc.43"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-wc.44"><span class="tbd">待引</span></td><td class="num" data-eid="s-cmp-wc.45"><span class="tbd">待引</span></td></tr></tbody></table></div><p class="src" data-eid="s-cmp-wc.46">来源：<span class="tbd">创维：本稿 6、7；华曦达：「华曦达财报分析」同链</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-cmp-wc.47"><b class="jl">含义：</b><span class="tbd">待写：一句含义，不堆公式</span></p></div></div></div></section>
+<!-- 闸门：可选；无可靠锚则整节不做；禁情景表 -->
+<section class="blk co-x" id="s-cmp-val" data-part="cmp" data-optional="true"><h2 data-eid="s-cmp-val.1">15 估值对照</h2><span class="opt">可选</span><div class="duo"><div class="duo-l"><div class="tscroll"><table class="d" id="t-cmp-val"><thead><tr><th data-eid="s-cmp-val.8">项目</th><th class="num side-k" data-eid="s-cmp-val.9">创维</th><th class="num side-s" data-eid="s-cmp-val.10">华曦达</th></tr></thead><tbody><tr><td data-eid="s-cmp-val.2">市值锚（日期）</td><td class="num side-k" data-eid="s-cmp-val.3"><span class="tbd">待填</span></td><td class="num side-s" data-eid="s-cmp-val.4"><span class="tbd">待引</span></td></tr><tr><td data-eid="s-cmp-val.5">市盈率（报告利润口径）</td><td class="num side-k" data-eid="s-cmp-val.6"><span class="tbd">待填</span></td><td class="num side-s" data-eid="s-cmp-val.7"><span class="tbd">待引</span></td></tr></tbody></table></div><p class="src" data-eid="s-cmp-val.11">来源：<span class="tbd">待填：两侧同日市值与报告利润</span></p></div><div class="duo-r"><div class="judg"><p data-eid="s-cmp-val.12"><b class="jl">说明：</b><span class="tbd">待写：两边能对齐的锚各一句；无可靠锚则删除整节</span></p></div></div></div></section>
+<!-- 闸门：读者口径；写手禁令见 README -->
+<section class="blk method" id="s-method" data-part="both"><h2 data-eid="s-method.1">口径说明</h2><dl><dt data-eid="s-method.2">列</dt><dd data-eid="s-method.3">数值表列顺序固定：2024 全年｜2025 全年｜2025H1｜2025H2（计算）｜2026H1。2025H2＝2025 全年减 2025H1。期末余额表同位次：2024-12-31｜2025-12-31｜2025-06-30｜2025H2 变化（计算）｜2026-06-30。</dd><dt data-eid="s-method.4">单位</dt><dd data-eid="s-method.5">亿元人民币；港币或美元写明汇率时点，或原币与人民币并列。</dd><dt data-eid="s-method.6">标签</dt><dd data-eid="s-method.7"><b class="t f">事实</b>出自财报或公告原文；<b class="t c">计算</b>由披露数推算；<b class="t i">推断</b>分析判断，无直接原文支持。</dd><dt data-eid="s-method.8">未披露</dt><dd data-eid="s-method.9"><span class="nd">未披露</span>表示已检索、原文未披露；整列未披露时删列并在表下说明。<span class="tbd">待填</span>表示尚未录入，不代表已查。</dd><dt data-eid="s-method.10">代理口径</dt><dd data-eid="s-method.11"><span class="cal px">代理口径</span>为按终端或运营商还原的口径，与官方地区收入不相加。</dd><dt data-eid="s-method.12">来源</dt><dd data-eid="s-method.13"><span class="tbd">待填：本报引用的公告与报告清单</span></dd></dl></section>
+</article>
+</main>
+<footer class="colophon"><p data-eid="foot.1">创维财报分析｜骨架 v0｜所有数字待事实包核定后填入；只写已披露事实及据此的计算与推断。</p></footer>
+<script>
+(function(){
+"use strict";
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+/* Feishu Chrome-sync constants: replaced atomically by build/replace tooling — keep on one line, no bare // inside */
+const SYNC_VER='v1', SAVE_FILE_TOKEN='', SAVE_URL='', SYNC_INBOX='', SYNC_WEBHOOK='', SYNC_AUTH='', SYNC_CURSOR_WEBHOOK='';
+const meta=n=>{const m=document.querySelector('meta[name="'+n+'"]');return m?m.content:"";};
+const REP=meta("report-name")||"skyworth-report";
+const KEY="rep-edits:"+REP, STALE_KEY=KEY+":stale";
+const body=document.body;
+const btnEdit=$("#btnEdit"), btnSync=$("#btnSync"), editbar=$("#editbar"), saveState=$("#saveState");
+
+/* Every editable unit carries a unique data-eid; originals are captured before any stored edit is applied. */
+const UNITS=$$("[data-eid]");
+const BY=new Map(), ORIG=new Map();
+UNITS.forEach(n=>{ if(BY.has(n.dataset.eid)) console.warn("重复 data-eid",n.dataset.eid); BY.set(n.dataset.eid,n); ORIG.set(n.dataset.eid,n.innerHTML); });
+const hash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36);};
+const readLS=k=>{try{return JSON.parse(localStorage.getItem(k)||"{}")||{};}catch(e){return {};}};
+const writeLS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}};
+
+let EDITS=readLS(KEY), staleN=0;
+(function applyStored(){
+  const stale=readLS(STALE_KEY);
+  Object.keys(EDITS).forEach(eid=>{
+    const rec=EDITS[eid], n=BY.get(eid);
+    if(!n||!rec||typeof rec.h!=="string"){ delete EDITS[eid]; return; }
+    if(rec.o!==hash(ORIG.get(eid))){
+      if(n.innerHTML!==rec.h){ stale[eid]=rec; staleN++; }
+      delete EDITS[eid]; return;
+    }
+    n.innerHTML=rec.h;
+  });
+  writeLS(KEY,EDITS); if(staleN) writeLS(STALE_KEY,stale);
+})();
+
+function changedUnits(){ return UNITS.filter(n=>n.innerHTML!==ORIG.get(n.dataset.eid)); }
+function status(msg){
+  if(!saveState) return;
+  const n=Object.keys(EDITS).length;
+  saveState.textContent=msg||(n?n+" 处修改已存本机浏览器":"")+(staleN?"｜"+staleN+" 处旧修改因原文已更新未套用":"");
+  const c=$("#cntTbd"); if(c) c.textContent="待填 "+$$("#doc .tbd").length+" 处 · 未披露 "+$$("#doc .nd").length+" 处";
+}
+
+/* ───── 修改 mode ───── */
+const pending=new Set(); let timer=0;
+function flush(){
+  pending.forEach(n=>{
+    const eid=n.dataset.eid, o=ORIG.get(eid);
+    if(n.innerHTML===o) delete EDITS[eid]; else EDITS[eid]={o:hash(o),h:n.innerHTML,t:Date.now()};
+    n.classList.toggle("warn-angle",/[<>＜＞≤≥]/.test(n.textContent));
+  });
+  const hadAngle=$$(".warn-angle").length;
+  pending.clear();
+  const ok=writeLS(KEY,EDITS);
+  checkH2();
+  status(!ok?"浏览器存储已满或被禁用：请先「下载改过的页面」":hadAngle?"有比较号：请改写为「低于／超过」":"");
+}
+function setEdit(on){
+  body.classList.toggle("editing",on);
+  btnEdit.setAttribute("aria-pressed",on?"true":"false");
+  $(".lbl",btnEdit).textContent=on?"退出修改":"修改";
+  btnSync.hidden=!on; editbar.hidden=!on;
+  UNITS.forEach(n=>{ if(on) n.setAttribute("contenteditable","true"); else n.removeAttribute("contenteditable"); });
+  if(!on) flush(); else status();
+}
+btnEdit.addEventListener("click",()=>setEdit(!body.classList.contains("editing")));
+document.addEventListener("input",e=>{
+  const n=e.target.closest&&e.target.closest("[data-eid]");
+  if(!n||!body.classList.contains("editing")) return;
+  pending.add(n); clearTimeout(timer); timer=setTimeout(flush,300);
+});
+/* A 待填 placeholder that now holds real text is unwrapped on blur, so it stops counting and looking as 待填 */
+document.addEventListener("focusout",e=>{
+  const n=e.target.closest&&e.target.closest("[data-eid]");
+  if(!n||!body.classList.contains("editing")) return;
+  n.querySelectorAll(".tbd").forEach(sp=>{ const t=sp.textContent.trim(); if(!/^待/.test(t)) sp.replaceWith(...(t?sp.childNodes:[])); });
+  pending.add(n); flush();
+});
+document.addEventListener("paste",e=>{
+  const n=e.target.closest&&e.target.closest('[contenteditable="true"]'); if(!n) return;
+  e.preventDefault();
+  document.execCommand("insertText",false,(e.clipboardData||window.clipboardData).getData("text/plain"));
+});
+document.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){ e.preventDefault(); if(body.classList.contains("editing")) sync(); else download(); return; }
+  const n=e.target.closest&&e.target.closest('[contenteditable="true"]');
+  if(n&&e.key==="Enter"){ e.preventDefault(); if(e.shiftKey&&!/^(TD|TH|A|H1|H2|H3)$/.test(n.tagName)) document.execCommand("insertLineBreak"); }
+});
+document.addEventListener("click",e=>{
+  const a=e.target.closest&&e.target.closest('a[contenteditable="true"]'); if(a) e.preventDefault();
+},true);
+
+/* 2025H2（计算）＝第 2 列 − 第 3 列；只校验、不改写 */
+function cellNum(td){
+  const t=td.textContent.replace(/事实|计算|推断|代理口径/g,"").replace(/[,，\s]/g,"").replace(/[−–]/g,"-");
+  return /^-?\d+(\.\d+)?$/.test(t)?parseFloat(t):null;
+}
+function checkH2(){
+  $$('table.t5 tbody tr[data-k="amt"]').forEach(tr=>{
+    const c=tr.cells; if(c.length<6) return;
+    const a=cellNum(c[2]), b=cellNum(c[3]), h=cellNum(c[4]);
+    const bad=a!=null&&b!=null&&h!=null&&Math.abs(a-b-h)>0.011;
+    c[4].classList.toggle("mismatch",bad);
+    if(bad) c[4].dataset.hint="应为 "+(a-b).toFixed(2); else delete c[4].dataset.hint;
+    c[4].title=bad?"2025H2（计算）应等于左侧两列之差："+(a-b).toFixed(2):"";
+    if(!bad) c[4].removeAttribute("title");
+  });
+}
+
+/* ───── 下载改过的页面 ───── */
+function cleanClone(){
+  const root=document.documentElement.cloneNode(true);
+  root.querySelectorAll("[contenteditable]").forEach(n=>n.removeAttribute("contenteditable"));
+  const b=root.querySelector("body"); b.classList.remove("editing","showtbd"); b.dataset.view="all"; b.dataset.side="both";
+  root.querySelectorAll("[data-part]").forEach(n=>n.removeAttribute("hidden"));
+  root.querySelectorAll(".viewsw button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.view==="all"?"true":"false"));
+  root.querySelectorAll(".cmpsw button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.side==="both"?"true":"false"));
+  root.querySelectorAll(".mismatch").forEach(n=>{n.classList.remove("mismatch");n.removeAttribute("title");delete n.dataset.hint;});
+  root.querySelectorAll(".warn-angle").forEach(n=>n.classList.remove("warn-angle"));
+  root.querySelectorAll('[class=""]').forEach(n=>n.removeAttribute("class"));
+  root.querySelectorAll("#syncBox").forEach(n=>n.remove());
+  root.querySelectorAll('.toc a[aria-current]').forEach(n=>n.removeAttribute("aria-current"));
+  const eb=root.querySelector("#editbar"); if(eb) eb.hidden=true;
+  const bs=root.querySelector("#btnSync"); if(bs) bs.hidden=true;
+  const be=root.querySelector("#btnEdit"); if(be){ be.setAttribute("aria-pressed","false"); const l=be.querySelector(".lbl"); if(l) l.textContent="修改"; }
+  const ss=root.querySelector("#saveState"); if(ss) ss.textContent="";
+  const ed=root.querySelector('meta[name="report-edited"]'); if(ed) ed.setAttribute("content",new Date().toISOString());
+  return "<!doctype html>\n"+root.outerHTML;
+}
+function download(){
+  flush();
+  const d=new Date(), p=x=>String(x).padStart(2,"0");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([cleanClone()],{type:"text/html;charset=utf-8"}));
+  a.download="创维财报分析_"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes())+".html";
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+  status("已下载改过的页面");
+}
+$("#btnDownload").addEventListener("click",download);
+$("#btnReset").addEventListener("click",()=>{
+  if(!confirm("清除本机浏览器里的全部修改，恢复为文件原文？")) return;
+  UNITS.forEach(n=>{ n.innerHTML=ORIG.get(n.dataset.eid); n.classList.remove("warn-angle"); });
+  EDITS={}; staleN=0; writeLS(KEY,EDITS); try{localStorage.removeItem(STALE_KEY);}catch(e){}
+  checkH2(); status("已恢复原文");
+});
+$("#btnTbd").addEventListener("click",e=>{
+  const on=!body.classList.contains("showtbd"); body.classList.toggle("showtbd",on);
+  e.currentTarget.setAttribute("aria-pressed",on?"true":"false");
+});
+
+/* ───── 同步修改（唯一同步按钮；通道接通前只生成修改包） ───── */
+const plain=h=>{const t=document.createElement("template");t.innerHTML=h;return t.content.textContent.replace(/\s+/g," ").trim();};
+const b64=s=>btoa(unescape(encodeURIComponent(s)));
+function ctxOf(n){ const s=n.closest("section[id]"), h=s&&s.querySelector("h2"); return (s?s.id:"head")+(h?" "+plain(h.innerHTML).slice(0,20):""); }
+function buildOps(){ return changedUnits().map(n=>({op:"edit",eid:n.dataset.eid,ctx:ctxOf(n),old:ORIG.get(n.dataset.eid),new:n.innerHTML})); }
+function pack(ops){
+  const d=new Date();
+  const lines=["【创维财报分析 同步 "+SYNC_VER+"】"+d.toLocaleString("zh-CN",{hour12:false})+"，共 "+ops.length+" 处修改"];
+  ops.forEach((o,i)=>lines.push((i+1)+". 修改 ["+o.ctx+"] 「"+plain(o.old).slice(0,60)+"」改为「"+plain(o.new).slice(0,60)+"」"));
+  lines.push("SDMCSYNC1:"+b64(JSON.stringify({ver:SYNC_VER,rep:REP,file:SAVE_FILE_TOKEN,ts:d.toISOString(),ops}))+":END");
+  return lines.join("\n");
+}
+function showBox(text,msg){
+  let m=$("#syncBox"); if(m) m.remove();
+  m=document.createElement("div"); m.id="syncBox"; m.setAttribute("role","dialog"); m.setAttribute("aria-label","同步修改");
+  const p=document.createElement("p"); p.textContent=msg;
+  const ta=document.createElement("textarea"); ta.readOnly=true; ta.value=text;
+  const row=document.createElement("div"); row.className="row";
+  const cp=document.createElement("button"); cp.className="btn"; cp.type="button"; cp.textContent="复制修改包";
+  cp.onclick=()=>{ ta.select(); (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).catch(()=>document.execCommand("copy")); cp.textContent="已复制"; };
+  const cl=document.createElement("button"); cl.className="btn"; cl.type="button"; cl.textContent="关闭"; cl.onclick=()=>m.remove();
+  row.append(cp,cl); m.append(p,ta,row); document.body.appendChild(m);
+}
+function sync(){
+  flush();
+  const ops=buildOps();
+  if(!ops.length){ status("还没有修改"); return; }
+  const text=pack(ops);
+  if(!SYNC_WEBHOOK){
+    showBox(text,"同步通道尚未接通（创维新飞书链接建立后接入）。"+ops.length+" 处修改已存本机浏览器；可复制修改包发给助理，或在修改栏点「下载改过的页面」。");
+    return;
+  }
+  const hdrs={"Content-Type":"application/json"}; if(SYNC_AUTH) hdrs.Authorization=SYNC_AUTH;
+  btnSync.disabled=true;
+  fetch(SYNC_WEBHOOK,{method:"POST",mode:"cors",headers:hdrs,body:JSON.stringify({msg_type:"text",content:{text},text})})
+    .then(r=>{ if(!r.ok) throw new Error("http "+r.status); status("已提交同步 "+ops.length+" 处修改"); })
+    .catch(err=>{ showBox(text,"自动同步失败，请复制修改包发给助理。["+(err&&err.message||"err")+"]"); if(SYNC_INBOX){ try{window.open(SYNC_INBOX,"_blank","noopener");}catch(e){} } })
+    .finally(()=>{ btnSync.disabled=false; });
+}
+btnSync.addEventListener("click",sync);
+$("#btnPrint").addEventListener("click",()=>window.print());
+
+/* ───── 筛选：视图（全部／创维本体／海外对比）与对比侧（两家／只看创维／只看华曦达）。只改属性，不碰正文。 ───── */
+function applyView(v){
+  body.dataset.view=v;
+  $$(".viewsw button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.view===v?"true":"false"));
+  $$("[data-part]").forEach(n=>{ const p=n.dataset.part; n.hidden=!(v==="all"||p==="both"||p===v); });
+  try{sessionStorage.setItem(KEY+":view",v);}catch(e){}
+}
+function applySide(s){
+  body.dataset.side=s;
+  $$(".cmpsw button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.side===s?"true":"false"));
+  try{sessionStorage.setItem(KEY+":side",s);}catch(e){}
+}
+$$(".viewsw button").forEach(b=>b.addEventListener("click",()=>applyView(b.dataset.view)));
+$$(".cmpsw button").forEach(b=>b.addEventListener("click",()=>applySide(b.dataset.side)));
+try{ applyView(sessionStorage.getItem(KEY+":view")||"all"); applySide(sessionStorage.getItem(KEY+":side")||"both"); }catch(e){ applyView("all"); applySide("both"); }
+
+/* ───── TOC 当前章节 ───── */
+const links=$$(".toc a[href^='#']");
+if("IntersectionObserver" in window){
+  const io=new IntersectionObserver(es=>{ es.forEach(en=>{ if(!en.isIntersecting) return;
+    links.forEach(a=>{ if(a.getAttribute("href")==="#"+en.target.id) a.setAttribute("aria-current","true"); else a.removeAttribute("aria-current"); }); }); },{rootMargin:"-130px 0px -70% 0px"});
+  links.forEach(a=>{ const t=document.getElementById(a.getAttribute("href").slice(1)); if(t) io.observe(t); });
+}
+
+window.addEventListener("beforeunload",()=>{ if(pending.size) flush(); });
+checkH2(); status();
+})();
+</script>
+</body>
+</html>
