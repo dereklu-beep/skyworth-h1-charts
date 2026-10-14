@@ -54,11 +54,12 @@ DEFAULTS = {
         'skyworth-report': {
             'title': '创维财报分析',
             'aliases': ['创维', 'skyworth'],
-            'drive_file_token': '',
+            'drive_file_token': 'PdxFbDlbDorRAexT1hRcpHuCnBf',
             'report_docx_token': '',
-            'master_html': '/workspace/skyworth/skyworth-report.html',
-            'state_dir': '/workspace/skyworth/sync',
-            'drops_dir': '/workspace/skyworth/sync/drops',
+            # confirm the live draft filename on the box; /workspace/sdmc_skyworth is the source of truth
+            'master_html': '/workspace/sdmc_skyworth/skyworth/skyworth-report.html',
+            'state_dir': '/workspace/sdmc_skyworth/skyworth/sync',
+            'drops_dir': '/workspace/sdmc_skyworth/skyworth/sync/drops',
             'hosted_html': '/workspace/feishu/relay/hosted/skyworth-report.html',
             'legacy_unlabelled_ver': [],
         },

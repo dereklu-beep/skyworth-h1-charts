@@ -1,0 +1,16 @@
+name = "sdmc-sync"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+# npx wrangler kv namespace create SYNC   → paste the id below
+[[kv_namespaces]]
+binding = "SYNC"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[vars]
+DEFAULT_SLUG = "huaxida-h1"
+ALLOWED_ORIGINS = "null,https://*.feishu.cn,https://*.workers.dev"
+
+# secrets (not in this file):
+#   npx wrangler secret put ADMIN_TOKEN   # same value as edge_admin_token in sync_config.json on the box
+#   npx wrangler secret put VIEW_KEY      # optional; the Feishu entry link then carries ?k=<VIEW_KEY>

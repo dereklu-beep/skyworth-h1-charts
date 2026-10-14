@@ -68,7 +68,7 @@ def inbox_token():
     if os.environ.get('SYNC_INBOX_TOKEN'):
         return os.environ['SYNC_INBOX_TOKEN']
     if os.path.exists(p):
-        return json.load(open(p)).get('token')
+        return _load(p, {}).get('token')
     return None
 
 
@@ -658,9 +658,15 @@ def stamp_eids(src):
 
 def _load(path, default):
     try:
-        return json.load(open(path, encoding='utf-8'))
+        with open(path, encoding='utf-8') as f:
+            return json.load(f)
     except Exception:
         return default
+
+
+def _write(path, text):
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(text)
 
 
 def _dump(path, obj):
@@ -721,7 +727,7 @@ def gather_blocks(a):
 
 def run(a):
     with Lock(a.target):
-        src = open(a.target, encoding='utf-8').read()
+        src = _read(a.target)
         before = len(src.encode('utf-8'))
 
         if a.stamp:
@@ -730,13 +736,13 @@ def run(a):
             print('stamped %d eids, rev %s' % (n, rev))
             if not a.dry:
                 shutil.copy(a.target, a.target + '.pre_stamp_' + time.strftime('%Y%m%d_%H%M%S'))
-                open(a.target, 'w', encoding='utf-8').write(src)
+                _write(a.target, src)
             return {'stamped': n, 'rev': rev}
 
         done = set(map(str, _load(a.log, [])))
         if a.replay:
             todo = []
-            for line in open(a.replay, encoding='utf-8'):
+            for line in _read(a.replay).splitlines():
                 try:
                     rec = json.loads(line)
                 except Exception:
@@ -803,7 +809,7 @@ def run(a):
                 out = a.out or a.target
                 if out == a.target:
                     shutil.copy(a.target, a.target + '.pre_sync_' + time.strftime('%Y%m%d_%H%M%S'))
-                open(out, 'w', encoding='utf-8').write(after_src)
+                _write(out, after_src)
                 os.makedirs(os.path.dirname(LEDGER) or '.', exist_ok=True)
                 with open(LEDGER, 'a', encoding='utf-8') as f:
                     for rec in ledger:

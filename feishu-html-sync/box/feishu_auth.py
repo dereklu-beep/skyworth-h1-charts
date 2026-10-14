@@ -5,6 +5,7 @@ The pipeline writes as Derek, not as the app/bot. One-time setup (no new bot, us
 
   python3 feishu_auth.py login              # prints an authorize URL; open it in Chrome, approve
   python3 feishu_auth.py exchange '<url or code>'   # paste the redirected URL (or just the code)
+  python3 feishu_auth.py exchange edge              # when redirect_uri is the edge worker /oauth/callback
   python3 feishu_auth.py status
 
 After that, refresh tokens rotate automatically (each refresh returns a new refresh_token, saved atomically).
@@ -115,8 +116,18 @@ def authorize_url(state='sync'):
         AUTHORIZE, app_id, quote(redirect_uri(), safe=''), quote(SCOPES, safe=''), state)
 
 
+def code_from_edge():
+    edge, tok = (config.get('edge_url') or '').rstrip('/'), config.get('edge_admin_token')
+    if not (edge and tok):
+        raise AuthError('edge_url / edge_admin_token not configured')
+    j = _requests().get(edge + '/api/oauth', headers={'Authorization': 'Bearer ' + tok}, timeout=30).json()
+    if not j.get('code'):
+        raise AuthError('edge has no pending authorisation code (approve in Chrome first; codes expire after 10 min)')
+    return j['code']
+
+
 def exchange(code_or_url):
-    code = code_or_url.strip()
+    code = code_from_edge() if code_or_url.strip() == 'edge' else code_or_url.strip()
     if code.startswith('http'):
         code = (parse_qs(urlparse(code).query).get('code') or [''])[0]
     if not code:

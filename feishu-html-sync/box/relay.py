@@ -464,8 +464,8 @@ class R(BaseHTTPRequestHandler):
 
 def serve(host=None, port=None):
     c = config.load()
-    srv = ThreadingHTTPServer((host or c['relay_host'], int(port or c['relay_port'])), R)
-    log('listening %s:%s master=%s' % (srv.server_address[0], srv.server_address[1], c['master_html']))
+    srv = ThreadingHTTPServer((host or c['relay_host'], int(c['relay_port'] if port is None else port)), R)
+    log('listening %s:%s reports=%s' % (srv.server_address[0], srv.server_address[1], ','.join(c['reports'])))
     return srv
 
 

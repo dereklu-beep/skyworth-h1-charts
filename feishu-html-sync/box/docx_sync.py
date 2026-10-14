@@ -327,7 +327,7 @@ def plan(old_paras, old_tables, new_paras, new_tables, dparas, dtables, state, a
     by_bid = {u['bid']: u for u in dparas}
     old_bids = state.get('paras_bid') or [None] * len(old_paras)
     reqs, inserts, deletes, report = [], [], [], []
-    retry_paras, retry_cells = {}, []
+    retry_paras, retry_cells, pending_del = {}, [], []
     taken = set()
     new_bids = [None] * len(new_paras)
 
@@ -386,6 +386,7 @@ def plan(old_paras, old_tables, new_paras, new_tables, dparas, dtables, state, a
                 report.append({'op': 'del', 'ok': True, 'how': how, 'old': old_paras[i]['text'][:60]})
             else:
                 report.append({'op': 'del', 'ok': False, 'reason': 'delete needs --allow-delete', 'old': old_paras[i]['text'][:60]})
+                pending_del.append({'fam': old_paras[i]['fam'], 'text': old_paras[i]['text'], 'bid': u['bid']})
 
     for j in pending_ins:
         anchor = next((new_bids[k] for k in range(j - 1, -1, -1) if new_bids[k]), None)
@@ -442,7 +443,7 @@ def plan(old_paras, old_tables, new_paras, new_tables, dparas, dtables, state, a
         hint = t_bids[ti] if ti < len(t_bids) else None
         tables_bid.append(hint if any(t['bid'] == hint for t in dtables) else (dtables[ti]['bid'] if ti < len(dtables) else None))
     return reqs, inserts, deletes, report, {'paras_bid': new_bids, 'tables_bid': tables_bid,
-                                            'retry_paras': retry_paras, 'retry_cells': retry_cells}
+                                            'retry_paras': retry_paras, 'retry_cells': retry_cells, 'pending_del': pending_del}
 
 
 def initial_map(new_paras, new_tables, dparas, dtables):
@@ -532,6 +533,16 @@ def sync(doc, html_src, api=None, dry=False, init=False, push_diffs=False, allow
     old_paras = st['paras']
     old_tables = st.get('tables') or []
     reqs, inserts, deletes, report, part = plan(old_paras, old_tables, new_paras, new_tables, dparas, dtables, st, allow_delete)
+    live = {u['bid']: u for u in dparas}
+    for pd in st.get('pending_del') or []:
+        u = live.get(pd['bid'])
+        if not u or u['text'] != pd['text'] or u['bid'] in {d['bid'] for d in deletes}:
+            continue
+        if allow_delete:
+            deletes.append(u)
+            report.append({'op': 'del', 'ok': True, 'how': 'pending', 'old': pd['text'][:60]})
+        else:
+            part['pending_del'].append(pd)
     writes = len(reqs) + len(inserts) + len(deletes)
     if not dry:
         created = _apply(api, doc, reqs, inserts, deletes, blocks) if writes else {}
