@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="report-name" content="华曦达财报测试">
+<meta name="report-version" content="71">
+<title>华曦达财报测试</title>
+</head>
+<body>
+<header class="masthead"><div class="in"><div class="bar">
+  <span class="save-state" id="saveState"></span>
+  <div class="tools" role="toolbar">
+    <button class="btn" id="btnEdit" type="button"><span class="lbl">编辑模式</span></button>
+    <button class="btn primary" id="btnSync" type="button" hidden><span class="lbl">同步修改</span></button>
+    <button class="btn line" id="btnPrint" type="button"><span class="lbl">打印</span></button>
+  </div>
+</div><nav class="toc"><ol id="toc"></ol></nav></div></header>
+<main id="top">
+<section class="cover">
+<h1>华曦达 2026 半年报速览</h1>
+<p class="summary-text">营收同比增长 18.2%，毛利率 21.5%。</p>
+</section>
+<article class="doc grid" id="doc">
+<h2 id="sec-rev">一、营收结构</h2>
+<p>上半年营收 41.3 亿元，海外占比 &nbsp;62%。<br>主要客户集中在拉美。</p>
+<table>
+<thead><tr><th>客户</th><th>地区</th><th>营收（亿元）</th></tr></thead>
+<tbody>
+<tr><td>深圳创展</td><td>华南</td><td>3.2</td></tr>
+<tr><td>Claro</td><td>拉美</td><td>9.8</td></tr>
+<tr><td>Telmex</td><td>拉美</td><td>6.1</td></tr>
+</tbody>
+</table>
+<h2 id="sec-supply">二、供应链</h2>
+<p>核心代工伙伴为深圳创展，占采购额 34%。</p>
+<table>
+<thead><tr><th>供应商</th><th>品类</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>深圳创展</td><td>整机代工</td><td>深圳创展</td></tr>
+<tr><td>瑞芯微</td><td>SoC</td><td>—</td></tr>
+</tbody>
+</table>
+<h2 id="sec-risk">三、风险</h2>
+<ul>
+<li>汇率波动影响毛利。</li>
+<li>客户集中度高。</li>
+</ul>
+<figure class="exhibit" data-chart="c1"><figcaption class="ex-head"><span class="ex-title">图1 客户营收</span></figcaption><div class="ex-chart"></div><p class="ex-src">来源：公司公告</p></figure>
+</article>
+<footer class="colophon grid"><p>v71 · 内部资料</p></footer>
+</main>
+<script type="application/json" id="report-data">
+{"charts":{"c1":{"type":"bar","series":["营收"],"rows":[["深圳创展",3.2],["Claro",9.8]]},"c2":{"type":"pie","series":["占比"],"rows":[["海外",62],["国内",38]]}}}
+</script>
+<script>
+var note = "深圳创展 <p>not an element</p>";
+</script>
+</body>
+</html>
