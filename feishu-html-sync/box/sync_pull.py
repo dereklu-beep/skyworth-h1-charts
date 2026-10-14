@@ -94,9 +94,13 @@ def decode_block(b64):
     return json.loads(base64.b64decode(s).decode('utf-8'))
 
 
-def blocks(text):
-    """Return [(pkg, key)] de-duplicated by key. Bad blocks are reported and skipped."""
-    out, seen = [], set()
+def blocks(text, recv=None, seen=None):
+    """Return [(pkg, key)] de-duplicated by key. Bad blocks are reported and skipped.
+
+    recv: when the transport saw the text (drop header / file mtime / inbox read). Packages from old
+    clients or truncated inbox copies may lack `ts`; they are ordered and logged by `_recv` instead.
+    """
+    out, seen = [], (set() if seen is None else seen)
     for m in PKG_RE.finditer(text or ''):
         raw = re.sub(r'\s', '', m.group(1))
         try:
@@ -110,8 +114,27 @@ def blocks(text):
         if key in seen:
             continue
         seen.add(key)
+        pkg.setdefault('_recv', recv or now_iso())
         out.append((pkg, key))
     return out
+
+
+def now_iso():
+    return time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime()) + '.000Z'
+
+
+def pkg_ts(pkg):
+    return str(pkg.get('ts') or pkg.get('_recv') or '')
+
+
+RECV_RE = re.compile(r'^RECV_TS:\s*(\S+)\s*$', re.M)
+
+
+def file_recv(path, text):
+    m = RECV_RE.search(text[:400])
+    if m:
+        return m.group(1)
+    return time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime(os.path.getmtime(path))) + '.000Z'
 
 
 def pkg_key(pkg, raw=''):
@@ -130,6 +153,16 @@ def has_real(pkg):
         op.get('op') in ('edit', 'del') or (op.get('op') == 'data' and not is_meta_key(op.get('key')))
         for op in (pkg.get('ops') or []) if isinstance(op, dict)
     )
+
+
+def rep_ok(pkg, names, legacy_vers):
+    """With --rep, only this report's packages pass. No `rep` passes only for an explicitly listed client ver."""
+    if not names:
+        return True
+    r = str(pkg.get('rep') or pkg.get('report') or '').strip().lower()
+    if r:
+        return r in {n.lower() for n in names}
+    return bool(legacy_vers) and pkg.get('ver') in legacy_vers
 
 
 def is_ping(pkg):
@@ -252,6 +285,9 @@ class Doc:
         heads = [(e.s, plain(self.inner(e))) for e in self.els if e.tag in ('h1', 'h2', 'h3', 'h4')]
         self._hpos = [h[0] for h in heads]
         self._htxt = [h[1] for h in heads]
+        sects = [(e.s, e.attrs.get('id') or '') for e in self.els if e.tag == 'h2' and e.attrs.get('id')]
+        self._spos = [s[0] for s in sects]
+        self._sid = [s[1] for s in sects]
         self.body = [e for e in self.els if self._in_body(e)]
 
     def inner(self, el):
@@ -269,6 +305,11 @@ class Doc:
     def heading(self, el):
         i = bisect.bisect_left(self._hpos, el.s) - 1
         return self._htxt[i] if i >= 0 else ''
+
+    def section_id(self, el):
+        """id of the nearest h2 at or before el (chapter ids are stable; heading text may be edited)."""
+        i = bisect.bisect_right(self._spos, el.s) - 1
+        return self._sid[i] if i >= 0 else ''
 
     def row_info(self, el):
         if el.tag in ('td', 'th') and el.parent is not None and el.parent.tag == 'tr':
@@ -295,7 +336,7 @@ class Doc:
 
 def op_ctx(op):
     """Context hints from new clients (h,row,col,prev,next) and old ones (ctx='id / row header')."""
-    c = {k: op.get(k) for k in ('h', 'row', 'col', 'prev', 'next', 'tag')}
+    c = {k: op.get(k) for k in ('sid', 'h', 'row', 'col', 'prev', 'next', 'tag')}
     legacy = op.get('ctx') or ''
     if legacy and not c.get('row') and ' / ' in legacy:
         c['row'] = legacy.split(' / ', 1)[1].strip()
@@ -311,7 +352,10 @@ def score(doc, el, c):
     s = 0
     if c.get('tag') and c['tag'] == el.tag:
         s += 1
-    if c.get('h') and _same(doc.heading(el), c['h'], 40):
+    if c.get('sid') and doc._sid:
+        if doc.section_id(el) == c['sid']:
+            s += 4
+    elif c.get('h') and _same(doc.heading(el), c['h'], 40):
         s += 4
     row, col = doc.row_info(el)
     if c.get('row') and _same(row, c['row'], 30):
@@ -326,7 +370,7 @@ def score(doc, el, c):
 
 
 def has_hints(c):
-    return any(c.get(k) for k in ('h', 'row', 'prev', 'next'))
+    return any(c.get(k) for k in ('sid', 'h', 'row', 'prev', 'next'))
 
 
 def pick(doc, cands, c, strict=False):
@@ -645,19 +689,34 @@ class Lock:
             self.f.close()
 
 
-def gather_text(a):
-    txt = ''
-    if not a.no_inbox:
-        try:
-            txt += inbox_text()
-        except Exception as e:
-            print('inbox unavailable, continuing with drops:', repr(e)[:160])
+def _read(path):
+    with open(path, encoding='utf-8', errors='replace') as f:
+        return f.read()
+
+
+def gather_sources(a):
+    """[(text, recv_ts)]. Drops come first: they are complete; inbox copies may be truncated."""
+    out = []
     for d in a.drops:
         for f in sorted(glob.glob(os.path.join(d, '*.txt'))):
-            txt += '\n' + open(f, encoding='utf-8', errors='replace').read()
+            t = _read(f)
+            out.append((t, file_recv(f, t)))
     for f in a.text:
-        txt += '\n' + open(f, encoding='utf-8', errors='replace').read()
-    return txt
+        t = _read(f)
+        out.append((t, file_recv(f, t)))
+    if not a.no_inbox:
+        try:
+            out.append((inbox_text(), now_iso()))
+        except Exception as e:
+            print('inbox unavailable, continuing with drops:', repr(e)[:160])
+    return out
+
+
+def gather_blocks(a):
+    seen, allb = set(), []
+    for text, recv in gather_sources(a):
+        allb += blocks(text, recv, seen)
+    return allb
 
 
 def run(a):
@@ -687,7 +746,11 @@ def run(a):
             un = _load(UNRESOLVED, [])
             todo = [({'id': 'retry', 'ts': '', 'ops': [u['op'] for u in un]}, 'retry')] if un else []
         else:
-            allb = blocks(gather_text(a))
+            allb = gather_blocks(a)
+            other = [k for p, k in allb if not rep_ok(p, a.rep, a.accept_unlabelled_ver)]
+            if other:
+                print('skip %d package(s) for other/unknown reports' % len(other))
+            allb = [(p, k) for p, k in allb if rep_ok(p, a.rep, a.accept_unlabelled_ver)]
             fresh = [(p, k) for p, k in allb if k not in done and not (p.get('ts') and str(p['ts']) in done)]
             pings = [k for p, k in fresh if is_ping(p)]
             if pings and not a.dry:
@@ -695,7 +758,7 @@ def run(a):
                 _dump(a.log, sorted(done))
                 print('skip ping-only', len(pings))
             todo = [(p, k) for p, k in fresh if has_real(p)]
-            todo.sort(key=lambda t: str(t[0].get('ts') or ''))
+            todo.sort(key=lambda t: pkg_ts(t[0]))
         if not todo:
             print('no new edits')
             return {'packages': []}
@@ -709,17 +772,17 @@ def run(a):
             ok = [r for r in res if r['ok'] and r['how'] not in ('meta', 'noop')]
             bad = [r for r in res if not r['ok']]
             print('%s %s ts=%s ops=%d ok=%d unresolved=%d%s' % (
-                pkg.get('ver', '?'), key, pkg.get('ts', '-'), len(ops), len(ok), len(bad), ' (stale tab)' if stale else ''))
+                pkg.get('ver', '?'), key, pkg_ts(pkg) or '-', len(ops), len(ok), len(bad), ' (stale tab)' if stale else ''))
             for r in res:
                 print('   #%d %-4s %-9s %s%s' % (r['i'], r['op'], r['how'] or 'FAIL', r.get('preview', ''),
                                                   ('  [%s]' % r['reason']) if r['reason'] else ''))
             for r in res:
                 if r['ok'] and r['how'] not in ('already', 'meta', 'noop'):
-                    ledger.append({'key': key, 'ts': pkg.get('ts', ''), 'how': r['how'], 'op': ops[r['i']]})
+                    ledger.append({'key': key, 'ts': pkg_ts(pkg), 'how': r['how'], 'op': ops[r['i']]})
                 if not r['ok']:
-                    unresolved.append({'key': key, 'ts': pkg.get('ts', ''), 'reason': r['reason'],
+                    unresolved.append({'key': key, 'ts': pkg_ts(pkg), 'reason': r['reason'],
                                        'preview': r.get('preview', ''), 'op': ops[r['i']]})
-            report.append({'id': key, 'ts': pkg.get('ts', ''), 'total': len(ops), 'applied': len(ok),
+            report.append({'id': key, 'ts': pkg_ts(pkg), 'ts_missing': not pkg.get('ts'), 'total': len(ops), 'applied': len(ok),
                            'unresolved': [{'i': r['i'], 'reason': r['reason'], 'preview': r.get('preview', '')} for r in bad],
                            'stale_tab': stale})
 
@@ -727,7 +790,9 @@ def run(a):
         changed = bool(ledger)
         rev = rev0
         if changed:
-            after_src, rev = set_rev(src)
+            # persist eids for anything the edit introduced, so the next tab load gets stable ids
+            after_src, _ = stamp_eids(src)
+            after_src, rev = set_rev(after_src)
         after = len(after_src.encode('utf-8'))
         if after > before * 1.15 + 5000:
             raise SystemExit('refuse write: size balloon %s -> %s (would re-bloat)' % (before, after))
@@ -754,7 +819,8 @@ def run(a):
         for r in report:
             r.update(rev=rev, written=changed and not a.dry, at=time.strftime('%Y-%m-%d %H:%M:%S'))
             if a.status_dir and not a.dry:
-                _dump(os.path.join(a.status_dir, re.sub(r'[^A-Za-z0-9_.-]', '_', r['id']) + '.json'), r)
+                sp_ = os.path.join(a.status_dir, re.sub(r'[^A-Za-z0-9_.-]', '_', r['id']) + '.json')
+                _dump(sp_, dict(_load(sp_, {}), **r))
         summary = {'packages': report, 'rev': rev, 'written': changed and not a.dry}
         print('SYNC_RESULT ' + json.dumps(summary, ensure_ascii=False))
         return summary
@@ -773,6 +839,9 @@ def parse_args(argv=None):
     ap.add_argument('--stamp', action='store_true', help='persist data-eid + sync-rev into --target, then exit')
     ap.add_argument('--replay', help='re-apply a sync_ledger.jsonl onto --target (after a writer rebuild)')
     ap.add_argument('--retry-unresolved', action='store_true', help='retry ops in sync_unresolved.json')
+    ap.add_argument('--rep', nargs='*', default=[], help='only apply packages whose `rep` is one of these names')
+    ap.add_argument('--accept-unlabelled-ver', nargs='*', default=[],
+                    help='with --rep: also accept packages without `rep` from these client versions (e.g. v46)')
     a = ap.parse_args(argv)
     if a.drops is None:
         a.drops = [DEFAULT_DROPS] if os.path.isdir(DEFAULT_DROPS) else []
