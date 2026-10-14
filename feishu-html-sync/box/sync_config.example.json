@@ -1,0 +1,24 @@
+{
+  "feishu_live_writes": false,
+  "push_drive": true,
+  "push_docx": false,
+  "push_edge": false,
+  "append_inbox": true,
+  "auto_apply": true,
+  "edge_url": "",
+  "edge_admin_token": "",
+  "reports": {
+    "huaxida-h1": {
+      "drive_file_token": "FXqHbFI37oGOCyxT3NkcVhjnnRg",
+      "report_docx_token": "",
+      "master_html": "/workspace/sdmc_skyworth/v71_fix/华曦达vs创维财报对比_v71_可编辑.html",
+      "derek_confirmed": false
+    },
+    "skyworth-report": {
+      "drive_file_token": "PdxFbDlbDorRAexT1hRcpHuCnBf",
+      "report_docx_token": "",
+      "master_html": "/workspace/sdmc_skyworth/skyworth/skyworth-report.html",
+      "derek_confirmed": false
+    }
+  }
+}
