@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+"""Poll Feishu sync inbox + local drops, apply new SDMCSYNC1 blocks via sync_pull, then optionally replace Feishu master.
+
+Usage (from /workspace/sdmc_skyworth):
+  python3 v41/sync_watch.py              # one pass; replace only if real edit/del ops
+  python3 v41/sync_watch.py --dry
+  python3 v41/sync_watch.py --loop 30    # poll; never auto-replace unless --force-replace
+  python3 v41/sync_watch.py --no-replace
+  python3 v41/sync_watch.py --force-replace  # allow Feishu overwrite on real ops
+"""
+import os, sys, json, time, argparse, subprocess, hashlib, glob, re, base64
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+DROPS = os.path.join(HERE, 'sync_inbox_drops')
+STATE = os.path.join(HERE, 'sync_watch_state.json')
+TARGET = os.path.join(ROOT, 'v71_std', '华曦达vs创维财报对比_v71_可编辑.html')
+MASTER = 'FXqHbFI37oGOCyxT3NkcVhjnnRg'
+PULL = os.path.join(ROOT, 'sync_pull.py')
+REPLACE = '/workspace/feishu/replace.py'
+
+
+def load_state():
+    if os.path.exists(STATE):
+        return json.load(open(STATE))
+    return {'seen_drops': {}, 'last_inbox_hash': '', 'passes': 0}
+
+
+def save_state(st):
+    json.dump(st, open(STATE, 'w'), ensure_ascii=False, indent=2)
+
+
+def new_drops(st):
+    os.makedirs(DROPS, exist_ok=True)
+    out = []
+    for path in sorted(glob.glob(os.path.join(DROPS, 'drop_*.txt'))):
+        try:
+            mtime = os.path.getmtime(path)
+            size = os.path.getsize(path)
+        except OSError:
+            continue
+        prev = st['seen_drops'].get(path)
+        if prev and prev.get('mtime') == mtime and prev.get('size') == size:
+            continue
+        out.append(path)
+    return out
+
+
+def inbox_raw():
+    import requests
+    B = 'https://open.feishu.cn/open-apis'
+    inbox = json.load(open(os.path.join(HERE, 'inbox.json')))['token']
+    r = requests.post(
+        B + '/auth/v3/tenant_access_token/internal',
+        json={'app_id': os.environ['FEISHU_APP_ID'], 'app_secret': os.environ['FEISHU_APP_SECRET']},
+        timeout=30,
+    ).json()
+    tok = r['tenant_access_token']
+    j = requests.get(
+        f'{B}/docx/v1/documents/{inbox}/raw_content',
+        headers={'Authorization': 'Bearer ' + tok},
+        timeout=30,
+    ).json()
+    if j.get('code'):
+        raise RuntimeError('inbox read failed: %s' % j)
+    return (j.get('data') or {}).get('content') or ''
+
+
+def inbox_hash_and_content():
+    content = inbox_raw()
+    return hashlib.sha256(content.encode()).hexdigest(), content
+
+
+def count_packages(text):
+    return len(re.findall(r'SDMCSYNC1:', text or ''))
+
+
+def packages_have_real_ops(text):
+    """True only if some block has edit/del or non-ping data ops."""
+    for m in re.finditer(r'SDMCSYNC1:([A-Za-z0-9+/=\s]+?):END', text or ''):
+        try:
+            b = json.loads(base64.b64decode(re.sub(r'\s', '', m.group(1))).decode('utf-8'))
+        except Exception:
+            continue
+        for op in b.get('ops') or []:
+            if op.get('op') in ('edit', 'del'):
+                return True
+            if op.get('op') == 'data' and op.get('key') not in ('__ping', 'ping'):
+                return True
+    return False
+
+
+def run_pull(extra_texts, dry=False):
+    cmd = [sys.executable, PULL, '--target', TARGET]
+    if dry:
+        cmd.append('--dry')
+    for t in extra_texts:
+        cmd.extend(['--text', t])
+    print('+', ' '.join(cmd), flush=True)
+    p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=600)
+    sys.stdout.write(p.stdout or '')
+    sys.stderr.write(p.stderr or '')
+    return p.returncode, (p.stdout or '') + (p.stderr or '')
+
+
+def run_replace():
+    cmd = [sys.executable, REPLACE, MASTER, TARGET]
+    print('+', ' '.join(cmd), flush=True)
+    p = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    sys.stdout.write(p.stdout or '')
+    sys.stderr.write(p.stderr or '')
+    return p.returncode
+
+
+def one_pass(dry=False, no_replace=False):
+    st = load_state()
+    drops = new_drops(st)
+    ih, content = inbox_hash_and_content()
+    n_pkg = count_packages(content)
+    inbox_changed = ih != st.get('last_inbox_hash')
+    print(f'inbox packages(SDMCSYNC1)={n_pkg} new_drops={len(drops)} inbox_changed={inbox_changed}')
+    if not drops and not inbox_changed:
+        print('no new drops / inbox unchanged')
+        return 0
+    rc, out = run_pull(drops, dry=dry)
+    if dry:
+        return rc
+    if rc != 0:
+        print('pull failed rc', rc)
+        return rc
+    for path in drops:
+        try:
+            st['seen_drops'][path] = {'mtime': os.path.getmtime(path), 'size': os.path.getsize(path)}
+        except OSError:
+            pass
+    st['last_inbox_hash'] = ih
+    st['passes'] = st.get('passes', 0) + 1
+    save_state(st)
+    if 'applied ->' not in out:
+        print('pull ok but nothing applied (already done or empty)')
+        return 0
+    blob = content
+    for path in drops:
+        try:
+            blob += '\n' + open(path, encoding='utf-8').read()
+        except OSError:
+            pass
+    if not packages_have_real_ops(blob):
+        print('applied was ping/empty only; skip Feishu overwrite')
+        return 0
+    if no_replace:
+        print('applied locally; --no-replace set, skip Feishu overwrite')
+        return 0
+    return run_replace()
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--loop', type=int, default=0, help='poll interval seconds; 0 = once')
+    ap.add_argument('--dry', action='store_true', help='list/detect only; no apply, no replace')
+    ap.add_argument('--no-replace', action='store_true', help='apply to local HTML but do not call replace.py')
+    ap.add_argument('--force-replace', action='store_true', help='allow Feishu overwrite on real ops (needed for loop)')
+    a = ap.parse_args()
+    if a.loop and not a.force_replace:
+        a.no_replace = True
+        print('loop: Feishu replace disabled (pass --force-replace to enable)', flush=True)
+    if a.loop <= 0:
+        sys.exit(one_pass(dry=a.dry, no_replace=a.no_replace) or 0)
+    print(f'watching every {a.loop}s …', flush=True)
+    while True:
+        try:
+            one_pass(dry=a.dry, no_replace=a.no_replace)
+        except Exception as e:
+            print('watch error', e, flush=True)
+        time.sleep(a.loop)
+
+
+if __name__ == '__main__':
+    main()
