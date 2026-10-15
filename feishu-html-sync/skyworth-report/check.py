@@ -22,10 +22,12 @@ REQUIRED = [
 ]
 OPTIONAL = ["s-cmp-val"]
 FLOW_H = ["2024 全年", "2025 全年", "2025H1", "2025H2（计算）", "2026H1"]
-BAL_H = ["2024-12-31", "2025-12-31", "2025-06-30", "2025H2 变化（计算）", "2026-06-30"]
+# 期末余额表按日历排列；「2025H2 变化」＝2025-12-31 减 2025-06-30，只放期末差额
+BAL_H = ["2024-12-31", "2025-06-30", "2025-12-31", "2025H2 变化（计算）", "2026-06-30"]
 EDITABLE = {"h1", "h2", "h3", "h4", "p", "li", "td", "th", "caption", "dt", "dd", "figcaption"}
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
 ANGLE = re.compile(r"[<>＜＞≤≥]")
+GATE_WORDS = re.compile(r"硬闸|限措辞|挡|可写")
 FORECAST = re.compile(r"预测|情景|2026H2|2026 ?年下半年|全年展望|核实清单")
 TAG_WORDS = re.compile(r"事实|计算|推断|代理口径")
 GROUP = re.compile(r"创维集团|00751")
@@ -169,8 +171,13 @@ def check(path):
             if span != 6:
                 fails.append(f"{tid} 有一行不是 6 格：「{cells[0].all_text().strip()[:20] if cells else ''}」")
                 continue
+            bal = "t5b" in t.cls()
+            if bal and tr.attrs.get("data-k") == "ratio" and num(cells[4]) is not None:
+                fails.append(f"{tid}「{cells[0].all_text().strip()[:20]}」变化列放了期间数 {num(cells[4])}：只放期末差额，期间数写脚注，该格写「—」")
             if tr.attrs.get("data-k") == "amt":
                 a, b, h = num(cells[2]), num(cells[3]), num(cells[4])
+                if bal:
+                    a, b = b, a
                 if None not in (a, b, h) and abs(a - b - h) > 0.011:
                     fails.append(f"{tid}「{cells[0].all_text().strip()[:20]}」2025H2（计算）{h} 不等于 {a} 减 {b}")
                 if h is not None and "计算" not in cells[4].all_text() and "计算" not in header_text(ths[4]):
@@ -181,6 +188,8 @@ def check(path):
                     break
 
     for text, n in tree.texts:
+        if GATE_WORDS.search(text):
+            fails.append(f"{section_of(n).attrs.get('id') if section_of(n) else '页外'} 出现内部闸语言「{GATE_WORDS.search(text).group(0)}」：老板版不得出现")
         if ANGLE.search(text):
             fails.append(f"正文含尖括号或比较符，请改写为「低于／超过」：「{text.strip()[:40]}」")
     front = [n for n in nodes if n.tag == "section" and (n.attrs.get("data-part") == "k" or n.attrs.get("id") == "s-cover")]
