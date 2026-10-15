@@ -158,7 +158,8 @@ def resolve(p, head, routes):
         return None, 'rep %s conflicts with token %s (%s)' % (rep, r['token'], r['label'])
     title = str(p.get('title') or head or '')
     kws = r.get('title_keywords') or []
-    if title and kws and not any(k in title for k in kws):
+    others = [k for x in routes if x is not r for k in (x.get('title_keywords') or []) if k not in kws]
+    if title and not any(k in title for k in kws) and any(k in title for k in others):
         return None, 'title %r conflicts with token %s (%s)' % (title[:40], r['token'], r['label'])
     return r, None
 

@@ -42,6 +42,10 @@ EDIT_TAGS = {'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'li', 'td', 'th', 'dt', 'd
 EDIT_CLS = {'ex-title', 'ex-src', 'summary-text', 'summary-label', 'callout-title'}
 NO_EDIT_CLS = {'ex-editor', 'ex-chart', 'tbl-tools'}
 ROOT_CLS = {'cover', 'doc', 'colophon'}
+# inside <template id="report-tpl"> the v46 client edits these too (its TXT_SEL); the template carries no data-eid
+TPL_EDIT_TAGS = {'summary', 'label'}
+TPL_EDIT_CLS = {'ft', 'sub', 'lb', 'cs', 'cap', 'src', 'note', 'meta', 'yd-q', 'lede'}
+EID_ATTR_RE = re.compile(r'\sdata-eid="[^"]*"')
 RUNTIME_ATTRS = {'contenteditable', 'spellcheck', '_echarts_instance_'}
 ANCHORS = (12, 6, 3, 1)
 MIN_SCORE = 3
@@ -279,8 +283,10 @@ def plain(h):
 
 
 class Doc:
-    def __init__(self, src):
+    def __init__(self, src, scope=None):
+        """scope='tpl' / 'out': only elements inside / outside <template id="report-tpl"> (if the page has one)."""
         self.src = src
+        self.scope = None
         self.els = [e for e in _Indexer(src).els if e.cs is not None]
         heads = [(e.s, plain(self.inner(e))) for e in self.els if e.tag in ('h1', 'h2', 'h3', 'h4')]
         self._hpos = [h[0] for h in heads]
@@ -289,6 +295,16 @@ class Doc:
         self._spos = [s[0] for s in sects]
         self._sid = [s[1] for s in sects]
         self.body = [e for e in self.els if self._in_body(e)]
+        self.tpl = next((e for e in self.els if e.tag == 'template' and e.attrs.get('id') == 'report-tpl'), None)
+        if self.tpl is not None and scope:
+            inside = lambda e: self.tpl.oe <= e.s < self.tpl.cs  # noqa: E731
+            self.body = [e for e in self.body if inside(e) == (scope == 'tpl')]
+            self.scope = scope
+
+    def canon(self, h):
+        """canon(); inside the template data-eid is runtime-only, so it is ignored there."""
+        c = canon(h)
+        return EID_ATTR_RE.sub('', c) if self.scope == 'tpl' else c
 
     def inner(self, el):
         return self.src[el.oe:el.cs]
@@ -325,7 +341,8 @@ class Doc:
         return plain(self.inner(sibs[i]))[:40] if 0 <= i < len(sibs) else ''
 
     def editable(self, el):
-        if not (el.tag in EDIT_TAGS or el.cls() & EDIT_CLS):
+        tpl = self.scope == 'tpl'
+        if not (el.tag in EDIT_TAGS or el.cls() & EDIT_CLS or (tpl and (el.tag in TPL_EDIT_TAGS or el.cls() & TPL_EDIT_CLS))):
             return False
         if 'data-rt' in el.attrs or el.cls() & NO_EDIT_CLS:
             return False
@@ -401,11 +418,91 @@ def _descendants(el):
 
 # ───────────────────────── edit / delete / data ─────────────────────────
 
+DROP_WITH_CONTENT = {'script', 'style', 'iframe', 'frame', 'frameset', 'object', 'embed', 'applet', 'noscript',
+                     'template', 'textarea', 'select', 'option', 'math', 'foreignobject', 'portal', 'title',
+                     'animate', 'set', 'animatetransform', 'animatemotion', 'handler', 'listener'}
+DROP_TAG = {'base', 'link', 'meta', 'input', 'button', 'img', 'image', 'video', 'audio', 'source', 'track', 'canvas',
+            'form', 'param', 'keygen', 'dialog'}
+URL_ATTRS = {'href', 'xlink:href', 'src', 'action', 'formaction', 'poster', 'background', 'ping', 'data', 'lowsrc',
+             'dynsrc', 'longdesc', 'usemap', 'codebase', 'manifest', 'cite'}
+DROP_ATTRS = {'srcdoc', 'formaction', 'action', 'contenteditable', 'spellcheck'}
+BAD_CSS = re.compile(r'url\s*\(|expression|javascript|behavior|binding|@import|[\\<>]|/\*|position', re.I)
+
+
+def _safe_url(v):
+    v = re.sub(r'[\x00-\x20]', '', v or '').lower()
+    if v.startswith(('#', 'http:', 'https:', 'mailto:')):
+        return True
+    return ':' not in re.split(r'[/?#]', v, 1)[0]
+
+
+class _Sanitizer(HTMLParser):
+    """Re-serialise an edit fragment keeping text, entities and harmless markup; never emits script vectors."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=False)
+        self.out, self.skip = [], 0
+
+    def _attrs(self, tag, attrs):
+        cls = dict(attrs).get('class') or ''
+        fx = 'fx' in cls.split()
+        keep = []
+        for k, v in attrs:
+            v = v if v is not None else None
+            if k.startswith('on') or k in DROP_ATTRS or (fx and k == 'data-eid'):
+                continue
+            if k in URL_ATTRS and not _safe_url(v):
+                continue
+            if k == 'style' and v and BAD_CSS.search(v):
+                continue
+            if k.startswith('data-cmt') and v:
+                v = v[:1000]
+            keep.append(' %s' % k if v is None else ' %s="%s"' % (k, htmlmod.escape(v, quote=True)))
+        return ''.join(keep)
+
+    def handle_starttag(self, tag, attrs, end=''):
+        if self.skip:
+            if tag in DROP_WITH_CONTENT and not end:
+                self.skip += 1
+            return
+        if tag in DROP_WITH_CONTENT:
+            if not end:
+                self.skip = 1
+            return
+        if tag in DROP_TAG:
+            return
+        self.out.append('<%s%s%s>' % (tag, self._attrs(tag, attrs), end if tag not in VOID else ''))
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs, end='/')
+
+    def handle_endtag(self, tag):
+        if self.skip:
+            if tag in DROP_WITH_CONTENT:
+                self.skip -= 1
+            return
+        if tag not in DROP_WITH_CONTENT and tag not in DROP_TAG and tag not in VOID:
+            self.out.append('</%s>' % tag)
+
+    def handle_data(self, d):
+        if not self.skip:
+            self.out.append(d.replace('<', '&lt;').replace('>', '&gt;'))
+
+    def handle_entityref(self, name):
+        if not self.skip:
+            self.out.append('&%s;' % name)
+
+    def handle_charref(self, name):
+        if not self.skip:
+            self.out.append('&#%s;' % name)
+
+
 def clean_fragment(h):
-    h = h or ''
-    h = re.sub(r'\s(?:contenteditable|spellcheck)(?:="[^"]*")?', '', h)
-    h = re.sub(r'<script\b[\s\S]*?</script\s*>', '', h, flags=re.I)
-    return h
+    """Every edit's `new` HTML goes through here before it is spliced into the master."""
+    p = _Sanitizer()
+    p.feed(h or '')
+    p.close()
+    return ''.join(p.out)
 
 
 def _splice(src, a, b, mid):
@@ -435,6 +532,9 @@ def _text_count(raw, form):
 def resolve_edit(doc, op):
     """Return (new_src | None, how, reason)."""
     old, new = op.get('old') or '', clean_fragment(op.get('new') or '')
+    if doc.scope == 'tpl':
+        new = EID_ATTR_RE.sub('', new)
+    canon = doc.canon
     c_old, c_new, p_old, p_new = canon(old), canon(new), plain(old), plain(new)
     if c_old == c_new:
         return None, 'noop', None
@@ -491,7 +591,7 @@ def resolve_edit(doc, op):
         if el is None:
             return None, None, why
         form = next(h[1] for h in hits if h[0] is el)
-        repl = needle_n if form == needle_o else htmlmod.escape(needle_n, quote=False)
+        repl = needle_n if form == needle_o and not re.search('[<>]', needle_n) else htmlmod.escape(needle_n, quote=False)
         raw = doc.inner(el)
         at = _text_find(raw, form)
         inner = raw[:at] + repl + raw[at + len(form):]
@@ -520,10 +620,12 @@ def _hits(doc, cands, needle):
 
 def resolve_del(doc, op):
     old = op.get('old') or ''
+    canon = doc.canon
     for el in doc.by_eid(op.get('eid')):
         if not old or canon(doc.inner(el)) == canon(old):
             return _splice(doc.src, el.s, el.ce, ''), 'eid', None
-    hits = innermost(doc, [e for e in doc.body if doc.editable(e) and old and canon(doc.inner(e)) == canon(old)])
+    hits = innermost(doc, [e for e in doc.body if (doc.editable(e) or doc.scope == 'tpl') and old
+                           and canon(doc.inner(e)) == canon(old)])
     el, why = pick(doc, hits, op_ctx(op))
     if el is None:
         return None, ('already' if why == 'not found' else None), (None if why == 'not found' else why)
@@ -573,6 +675,21 @@ def patch_report_data(src, op):
     return src[:m.start(2)] + body + src[m.end(2):], 'data', '; '.join(notes) or None
 
 
+def _tpl_first(fn, src, op):
+    """Pages that render #sheet from <template id="report-tpl"> keep a stale rendered copy with the same eids.
+    The template is the source of truth: apply there, then mirror onto the rendered copy. Never patch only the
+    rendered copy — the page would rebuild it from the template and the edit would vanish on reload."""
+    if Doc(src).tpl is None:
+        return fn(Doc(src), op)
+    out, how, why = fn(Doc(src, 'tpl'), op)
+    if how is None:
+        return out, how, why
+    o2, h2, _ = fn(Doc(out if out is not None else src, 'out'), op)
+    if o2 is not None:
+        out = o2
+    return out, how, why
+
+
 def apply_ops(src, ops):
     """Apply ops sequentially. Returns (src, [result dict]). Never raises on a bad op."""
     res = []
@@ -581,10 +698,10 @@ def apply_ops(src, ops):
         r = {'i': i, 'op': kind, 'eid': (op or {}).get('eid') if isinstance(op, dict) else None}
         try:
             if kind == 'edit':
-                out, how, why = resolve_edit(Doc(src), op)
+                out, how, why = _tpl_first(resolve_edit, src, op)
                 r['preview'] = '%s → %s' % (plain(op.get('old'))[:40], plain(op.get('new'))[:40])
             elif kind == 'del':
-                out, how, why = resolve_del(Doc(src), op)
+                out, how, why = _tpl_first(resolve_del, src, op)
                 r['preview'] = 'del %s' % plain(op.get('old'))[:40]
             elif kind == 'data':
                 if is_meta_key(op.get('key')):
