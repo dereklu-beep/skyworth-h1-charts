@@ -1,5 +1,25 @@
 # 创维数字专报 · 瘦身 v2 DELTA（必改6＋补充｜2026-10-15）
 
+## USD 资产 11.85 补丁（2026-10-15 傍晚，最新）
+
+- **改了什么**：「4 钱卡在备料与美元净负债」块表下（`.duo-l`，紧挨美元净负债 −4.08 行）插 1 句 `sl-s-k-debt.30`：<span>币种口径</span>美元资产 11.85 亿元人民币＝货币资金约 1.58＋应收约 10.22＋其他应收约 0.04（2026H1 外币货币性项目附注，按币种统计，不等于境外资产；分项四舍五入后相加差 0.01）【事实】／【计算】。同块表下注删去同组资产分项（保留负债分项），全页 1.58 只出现 1 次。表、右栏两段、看板卡片不动。
+- **取数**：`internal/inputs/usd_assets_20261015/skyworth_usd_assets_11p85_cust_product_dig_20261015_7595.md`（md5 `efca2965…`）A.1／A.3；数字闸 `analyst_skyworth_usd_assets_11p85_dig_20261015_c663.md` 过、阻断 0。B 节客户／产品候选一条未用。
+- **补丁片段**：`artifacts/创维数字专报_入稿终稿_瘦身_v2_usd11p85_patch.md`（逐字找串＋插入 HTML＋grep 验证）。
+- **新 md5**：
+
+| 文件 | 补前 | 补后 |
+|---|---|---|
+| `artifacts/创维数字专报_入稿终稿_瘦身_v2.html` | `d7bb44d1…` | **`ea91e66d2a5c8c33c540fa8cd3aad4bd`** |
+| `artifacts/创维数字专报_入稿终稿_瘦身_v2_feishu.html` | `ef07c11f…` | **`dbded478854bb70e78001234885f8ef6`**（与干净版仍只差 token 1 行） |
+| 箱子底稿 dash `box_masters_20261015_usd_patch/…_v2_dash_feishu.html` | `ac35e2c5…`（未覆盖） | 新文件 `…_v2_dash_feishu_usd11p85.html` **`68a91287a7fe1479bcc54f654417351a`** |
+| 箱子底稿 report `box_masters_20261015_usd_patch/…_v2_report_feishu.html` | `4a456c88…`（未覆盖） | 新文件 `…_v2_report_feishu_usd11p85.html` **`1f0f3fd0c33ac9f2d79be727bc36ed8c`** |
+
+- **禁项自查**：客户名套美元资产 0（`s-k-debt` 块内无任何客户／渠道名）；外币＝境外 0（新句带 `cal px` 币种口径徽章，并写「不等于境外资产」）；B 节整包 0；半口径 4.08／15.69−10.22／5.47 0；零新数（五个数均出自事实包 A.3）。
+- **闸**：v73 闸 1–3、必改3、必改4（右栏仍 2 段）、D1、B1–B18、骨架／`slim_v2`（四块各 1 表、左表右判、结论 4 句）—— `check.py` 四个文件均 OK；浏览器控制台 0 错、1440／390 无溢出。
+- **注意**：浏览器测在箱子 dash／report 补后文件上点了「同步修改」，两文件内置 `SYNC_WEBHOOK`（webhook.site），约 09:56–09:57 UTC 很可能各发出 1 个测试包（`rep=skyworth-report`、`file=PdxFb…`、op `sl-s-k-ar.3` 末尾加「（测试改字）」）。**这两个包须丢弃，勿套用。**
+
+---
+
 | 项 | 内容 |
 |---|---|
 | **治理规格** | `artifacts/framework_skeleton_narrative_20261015.md`（骨架，**冲突时以它为准**）；伴随说明 `artifacts/OPUS_REVISE_LAYOUT_NARRATIVE_20261015.md` |
