@@ -132,6 +132,10 @@ def route_packages(texts, routes, st, force=False, dry=False):
                 if not dry:
                     _put(HELD, name, 'REASON: %s\n' % why + body)
             else:
+                if not (p.get('file') or p.get('file_token')):
+                    print('WARNING routed by legacy fallback, package has no file token (ver %s, title %r) → %s (%s); '
+                          'patch that client: sync_routes.py patch-client' % (p.get('ver'), (head or '')[:40], r['label'],
+                                                                              r['token']), flush=True)
                 print('route %s → %s (%s)' % (os.path.basename(src), r['label'], r['token']), flush=True)
                 if not dry:
                     _put(os.path.join(ROUTED, r['token'], 'queue'), name, body)

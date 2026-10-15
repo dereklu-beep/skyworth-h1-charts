@@ -19,13 +19,17 @@ CLI:
   python3 sync_routes.py check [routes.json]                       # validate the routes file (exit 1 on error)
   python3 sync_routes.py inject-token SRC DST TOKEN [--webhook URL] [--inbox URL]
                                                                    # copy SRC→DST, setting only the sync constants
+  python3 sync_routes.py patch-client MASTER TOKEN [--rep REP]     # in place (backup MASTER.pre_client_<ts>): token
+                                                                   # constant + client sends `file` (and `rep`) in SDMCSYNC1
 """
 import base64
 import hashlib
 import json
 import os
 import re
+import shutil
 import sys
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_ROUTES = os.environ.get('SYNC_ROUTES') or os.path.join(HERE, 'sync_routes.json')
@@ -185,6 +189,29 @@ def inject_token(src, token, webhook=None, inbox=None):
     return src.replace(old, new, 1), old, new
 
 
+CLIENT_RE = re.compile(r"(SDMCSYNC1:'\+b64\(JSON\.stringify\(\{)ver:SYNC_VER,")
+
+
+def patch_client(src, token, rep=None):
+    """Make an old client (e.g. 华曦达 v46) send its own token: set SAVE_FILE_TOKEN if needed and add
+    `file:SAVE_FILE_TOKEN` (+ `rep`) to the one SDMCSYNC1 package literal. Returns (html, list of changes)."""
+    changes = []
+    if master_token(src) != [token]:
+        src, old, new = inject_token(src, token)
+        changes.append((old, new))
+    if re.search(r"SDMCSYNC1:'\+b64\(JSON\.stringify\(\{ver:SYNC_VER,file:", src):
+        return src, changes
+    hits = CLIENT_RE.findall(src)
+    if len(hits) != 1:
+        raise ValueError('expected exactly one SDMCSYNC1 package literal `{ver:SYNC_VER,…}`, found %d' % len(hits))
+    add = 'file:SAVE_FILE_TOKEN,' + ("rep:'%s'," % rep if rep else '')
+    if rep and not re.match(r'^[A-Za-z0-9_-]+$', rep):
+        raise ValueError('bad rep %r' % rep)
+    src = CLIENT_RE.sub(lambda m: m.group(1) + 'ver:SYNC_VER,' + add, src, count=1)
+    changes.append(('{ver:SYNC_VER,', '{ver:SYNC_VER,' + add))
+    return src, changes
+
+
 def _md5(path):
     with open(path, 'rb') as f:
         return hashlib.md5(f.read()).hexdigest()
@@ -220,6 +247,25 @@ def main(argv=None):
         print('dst', _md5(dst_p), dst_p)
         print('-', old)
         print('+', new)
+        return 0
+    if argv and argv[0] == 'patch-client' and len(argv) >= 3:
+        path, token = argv[1:3]
+        opt = dict(zip(argv[3::2], argv[4::2]))
+        with open(path, encoding='utf-8') as f:
+            src = f.read()
+        out, changes = patch_client(src, token, opt.get('--rep'))
+        print('master', _md5(path), path)
+        if not changes:
+            print('already sends file=%s; unchanged' % token)
+            return 0
+        bak = '%s.pre_client_%s' % (path, time.strftime('%Y%m%d_%H%M%S'))
+        shutil.copy2(path, bak)
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(out)
+        for old, new in changes:
+            print('-', old)
+            print('+', new)
+        print('patched', _md5(path), '(backup %s)' % bak)
         return 0
     print(__doc__)
     return 2

@@ -32,7 +32,10 @@ SW_STUB = ('<!doctype html><html><head><meta name="report-name" content="skywort
            '</body></html>')
 HX_STUB = ('<!doctype html><html><head><title>华曦达 SDMC｜2026H1 财报分析</title></head><body><template id="report-tpl">'
            '<main><div class="doc"><section class="blk" id="s-concl"><h2><span>核心结论</span></h2><div class="cap" data-eid="33"><b data-eid="34">%s</b></div>'
-           '</section></div></main></template><script>const SYNC_VER=\'v46\', SAVE_FILE_TOKEN=\'%s\', SAVE_URL=\'\';</script></body></html>') % (CAP, FXQ)
+           '</section></div></main></template><script>const SYNC_VER=\'v46\', SAVE_FILE_TOKEN=\'%s\', SAVE_URL=\'\';\n'
+           'function editsText(ops){ const ts=new Date().toISOString(), lines=[];\n'
+           '  lines.push(\'SDMCSYNC1:\'+b64(JSON.stringify({ver:SYNC_VER,ts,ops}))+\':END\');\n  return lines.join(\'\\n\');\n}'
+           '</script></body></html>') % (CAP, FXQ)
 
 FAKE_REPLACE = r'''import hashlib, json, os, sys
 tok, path = sys.argv[1], sys.argv[2]
@@ -209,6 +212,94 @@ class Router(unittest.TestCase):
         spec.loader.exec_module(sw)
         self.assertIn('not %s' % FXQ, sw.guard(FXQ, self.sw, allow_shrink=True))
         self.assertIsNone(sw.guard(PDX, self.sw))
+
+
+class PatchClient(unittest.TestCase):
+    """Optional step: the FXqHb master's client sends `file` (+ rep); no content change; fallback still routes, with a warning."""
+
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        self.src = open(HX_SRC, encoding='utf-8').read() if os.path.isfile(HX_SRC) else HX_STUB
+
+    def tearDown(self):
+        shutil.rmtree(self.d)
+
+    @staticmethod
+    def outside_scripts(html):
+        import re
+        return re.sub(r'<script[\s\S]*?</script>', '', html)
+
+    def test_patch_is_client_only_and_idempotent(self):
+        out, ch = sync_routes.patch_client(self.src, FXQ, 'huaxida-h1')
+        self.assertEqual(len(ch), 1)
+        self.assertEqual(self.outside_scripts(out), self.outside_scripts(self.src))
+        i = next(k for k in range(len(self.src)) if self.src[k] != out[k])
+        ins = len(out) - len(self.src)
+        self.assertEqual(out[:i] + out[i + ins:], self.src, 'exactly one insertion')
+        self.assertEqual(out[i:i + ins], "file:SAVE_FILE_TOKEN,rep:'huaxida-h1',")
+        self.assertEqual(sync_routes.patch_client(out, FXQ, 'huaxida-h1'), (out, []))
+        self.assertEqual(sync_routes.master_token(out), [FXQ])
+        print('\nSMOKE patch-client: %s -> %s (+%d bytes, one insertion in <script>, page content identical)'
+              % (hashlib.md5(self.src.encode()).hexdigest(), hashlib.md5(out.encode()).hexdigest(),
+                 len(out.encode()) - len(self.src.encode())))
+
+    def test_patched_client_emits_file_token(self):
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('node not installed')
+        import re
+        out, _ = sync_routes.patch_client(self.src, FXQ, 'huaxida-h1')
+        line = re.search(r"lines\.push\('SDMCSYNC1:'.*?:END'\);", out).group(0)
+        js = ("const SYNC_VER='v46', SAVE_FILE_TOKEN=%r; const b64=s=>Buffer.from(s,'utf8').toString('base64');"
+              "const ts='2026-10-15T03:00:00.000Z', ops=[{op:'edit',old:'a',new:'b'}], lines=[];%s"
+              "process.stdout.write(lines[0]);" % (FXQ, line))
+        pkg = subprocess.run([node, '-e', js], capture_output=True, text=True, check=True).stdout
+        p = json.loads(base64.b64decode(pkg.split(':')[1]))
+        self.assertEqual((p['file'], p['rep'], p['ver']), (FXQ, 'huaxida-h1', 'v46'))
+        for i, sc in enumerate(re.findall(r'<script>([\s\S]*?)</script>', out)):
+            f = os.path.join(self.d, 's%d.js' % i)
+            open(f, 'w', encoding='utf-8').write(sc)
+            r = subprocess.run([node, '--check', f], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+
+    def test_empty_token_page_gets_token_too(self):
+        page = self.src.replace("SAVE_FILE_TOKEN='%s'" % FXQ, "SAVE_FILE_TOKEN=''")
+        out, ch = sync_routes.patch_client(page, FXQ)
+        self.assertEqual(len(ch), 2)
+        self.assertEqual(sync_routes.master_token(out), [FXQ])
+        self.assertIn('{ver:SYNC_VER,file:SAVE_FILE_TOKEN,ts', out)
+
+    def test_refuses_ambiguous_client(self):
+        with self.assertRaises(ValueError):
+            sync_routes.patch_client("const SYNC_VER='v46', SAVE_FILE_TOKEN='%s';" % FXQ, FXQ)
+        lit = "lines.push('SDMCSYNC1:'+b64(JSON.stringify({ver:SYNC_VER,ts,ops}))+':END');"
+        with self.assertRaises(ValueError):
+            sync_routes.patch_client("const SYNC_VER='v46', SAVE_FILE_TOKEN='%s';%s%s" % (FXQ, lit, lit), FXQ)
+
+
+class PatchClientRouting(Router):
+    def test_fallback_warns_token_routes_quietly_and_patch_ships_on_publish(self):
+        self.confirm(FXQ)
+        edit = [{'op': 'edit', 'eid': '34', 'ctx': 's-concl', 'old': CAP, 'new': CAP + '（旧）'}]
+        self.drop('drop_old.txt', pkg_text({'ver': 'v46', 'ts': 't7', 'ops': edit}, '【报告同步 v46】华曦达 SDMC｜2026H1 财报分析'))
+        self.assertEqual(self.watch(), 0, self.out)
+        self.assertIn('WARNING routed by legacy fallback', self.out)
+        self.assertEqual([c['token'] for c in self.replaced()], [FXQ])
+
+        self.assertEqual(subprocess.run([sys.executable, os.path.join(self.v41, 'sync_routes.py'), 'patch-client', self.hx, FXQ,
+                                         '--rep', 'huaxida-h1'], capture_output=True, text=True).returncode, 0)
+        self.assertEqual(self.watch('--publish', FXQ), 0, self.out)
+        self.assertEqual(self.replaced()[-1]['md5'], md5(self.hx), 'next confirmed publish ships the patched client')
+
+        edit2 = [{'op': 'edit', 'eid': '34', 'ctx': 's-concl', 'old': CAP + '（旧）', 'new': CAP + '（新）'}]
+        self.drop('drop_new.txt', pkg_text({'ver': 'v46', 'file': FXQ, 'rep': 'huaxida-h1', 'ts': 't8', 'ops': edit2},
+                                           '【报告同步 v46】华曦达 SDMC｜2026H1 财报分析'))
+        self.assertEqual(self.watch(), 0, self.out)
+        self.assertNotIn('legacy fallback', self.out)
+        self.assertEqual([c['token'] for c in self.replaced()], [FXQ, FXQ, FXQ])
+        self.assertEqual(md5(self.sw), self.md5_0['sw'])
+        print('SMOKE fallback: v46 without file → routed FXqHb + WARNING; patch-client + --publish shipped %s; '
+              'package with file → routed FXqHb, no warning; 创维 master unchanged' % md5(self.hx))
 
 
 class Install(unittest.TestCase):
