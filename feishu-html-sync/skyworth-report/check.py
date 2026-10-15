@@ -21,11 +21,19 @@ REQUIRED = [
     "s-method",
 ]
 OPTIONAL = ["s-cmp-val"]
+# 瘦身版（<meta name="report-profile" content="slim">）：海外四块＋同业对照要点，正文不放表
+REQUIRED_SLIM = ["s-cover", "s-concl", "s-k-region", "s-k-cust", "s-k-ar", "s-k-debt", "s-cmp-os", "s-method"]
+# 瘦身 v2（content="slim_v2"）：同一章节骨架；四拍核心块各恰好 1 张表，左表（.duo-l）右判（.duo-r .judg）；
+# 核心结论恰好 4 句；结论与华曦达对照不放表
+CORE_SLIM = ["s-k-region", "s-k-cust", "s-k-ar", "s-k-debt"]
+DATE_H = re.compile(r"(20\d\d)-(\d\d)-(\d\d)")
 FLOW_H = ["2024 全年", "2025 全年", "2025H1", "2025H2（计算）", "2026H1"]
-BAL_H = ["2024-12-31", "2025-12-31", "2025-06-30", "2025H2 变化（计算）", "2026-06-30"]
+# 期末余额表按日历排列；「2025H2 变化」＝2025-12-31 减 2025-06-30，只放期末差额
+BAL_H = ["2024-12-31", "2025-06-30", "2025-12-31", "2025H2 变化（计算）", "2026-06-30"]
 EDITABLE = {"h1", "h2", "h3", "h4", "p", "li", "td", "th", "caption", "dt", "dd", "figcaption"}
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
 ANGLE = re.compile(r"[<>＜＞≤≥]")
+GATE_WORDS = re.compile(r"硬闸|限措辞|挡|可写")
 FORECAST = re.compile(r"预测|情景|2026H2|2026 ?年下半年|全年展望|核实清单")
 TAG_WORDS = re.compile(r"事实|计算|推断|代理口径")
 GROUP = re.compile(r"创维集团|00751")
@@ -117,17 +125,62 @@ def check(path):
     dup = sorted({i for i in ids if ids.count(i) > 1})
     if dup:
         fails.append(f"重复 id：{dup}")
+    profile = next((n.attrs.get("content") for n in nodes if n.tag == "meta" and n.attrs.get("name") == "report-profile"), "")
+    slim = profile in ("slim", "slim_v2")
+    required, optional = (REQUIRED_SLIM, []) if slim else (REQUIRED, OPTIONAL)
     sec_ids = [n.attrs["id"] for n in nodes if n.tag == "section" and "id" in n.attrs]
-    missing = [s for s in REQUIRED if s not in sec_ids]
+    missing = [s for s in required if s not in sec_ids]
     if missing:
         fails.append(f"缺少章节 id：{missing}")
-    order = [s for s in sec_ids if s in REQUIRED + OPTIONAL]
-    expect = [s for s in REQUIRED[:-1] + OPTIONAL + REQUIRED[-1:] if s in order]
+    order = [s for s in sec_ids if s in required + optional]
+    expect = [s for s in required[:-1] + optional + required[-1:] if s in order]
     if order != expect:
         fails.append(f"章节顺序与骨架不符：{order}")
     pos = {s: i for i, s in enumerate(sec_ids)}
-    if "s-cmp-intro" in pos and any(pos.get(s, -1) > pos["s-cmp-intro"] for s in REQUIRED if s.startswith("s-k-")):
-        fails.append("创维数字本体章节出现在对比导读之后")
+    first_cmp = next((s for s in required if s.startswith("s-cmp-")), None)
+    if first_cmp in pos and any(pos.get(s, -1) > pos[first_cmp] for s in required if s.startswith("s-k-")):
+        fails.append("创维数字本体章节出现在对比章节之后")
+    tables = [n for n in nodes if n.tag == "table" and section_of(n)]
+    if profile == "slim" and tables:
+        fails.append(f"瘦身版正文不放表，实有 {len(tables)} 张：{[t.attrs.get('id', '?') for t in tables][:5]}")
+    if profile == "slim_v2":
+        secs = {n.attrs["id"]: n for n in nodes if n.tag == "section" and "id" in n.attrs}
+        for sid in CORE_SLIM:
+            sec = secs.get(sid)
+            if not sec:
+                continue
+            ts = [t for t in tables if section_of(t) is sec]
+            if len(ts) != 1:
+                fails.append(f"{sid} 应恰好 1 张表（禁 0 表、最多 1 表），实有 {len(ts)} 张")
+                continue
+            dl = [a for a in ts[0].anc() if "duo-l" in a.cls()]
+            duo = dl[0].parent if dl else None
+            if not duo or "duo" not in duo.cls():
+                fails.append(f"{sid} 的表不在 .duo > .duo-l 里（应左表右判）")
+                continue
+            kids = [c for c in duo.children if c.tag == "div"]
+            if len(kids) != 2 or "duo-l" not in kids[0].cls() or "duo-r" not in kids[1].cls() \
+                    or not any("judg" in c.cls() for c in kids[1].walk()):
+                fails.append(f"{sid} 的 .duo 应为 .duo-l（表）在前、.duo-r（含 .judg 判断）在后")
+            h2 = next((c for c in sec.children if c.tag == "h2"), None)
+            if not h2 or sec.children.index(h2) > sec.children.index(duo):
+                fails.append(f"{sid} 应先有判断标题（h2）再见表")
+        for sid in ("s-concl", "s-cmp-os"):
+            ts = [t for t in tables if secs.get(sid) is not None and section_of(t) is secs[sid]]
+            if ts:
+                fails.append(f"{sid} 不放表，实有 {len(ts)} 张")
+        concl = secs.get("s-concl")
+        if concl:
+            lis = [c for c in concl.walk() if c.tag == "li"]
+            if len(lis) != 4:
+                fails.append(f"核心结论应恰好 4 句（主线四拍），实有 {len(lis)} 条")
+        for t in tables:
+            ths = [header_text(c) for c in t.walk() if c.tag == "th"]
+            dates = [DATE_H.search(h).groups() for h in ths if DATE_H.search(h)]
+            if dates != sorted(dates):
+                fails.append(f"{t.attrs.get('id', '?')} 日期列须按日历从早到晚：{[h for h in ths if DATE_H.search(h)]}")
+            if "t5" not in t.cls() and any("变化" in h for h in ths):
+                fails.append(f"{t.attrs.get('id', '?')} 紧凑表不放变化列")
 
     eids = [n.attrs["data-eid"] for n in nodes if "data-eid" in n.attrs]
     dup = sorted({e for e in eids if eids.count(e) > 1})
@@ -169,8 +222,13 @@ def check(path):
             if span != 6:
                 fails.append(f"{tid} 有一行不是 6 格：「{cells[0].all_text().strip()[:20] if cells else ''}」")
                 continue
+            bal = "t5b" in t.cls()
+            if bal and tr.attrs.get("data-k") == "ratio" and num(cells[4]) is not None:
+                fails.append(f"{tid}「{cells[0].all_text().strip()[:20]}」变化列放了期间数 {num(cells[4])}：只放期末差额，期间数写脚注，该格写「—」")
             if tr.attrs.get("data-k") == "amt":
                 a, b, h = num(cells[2]), num(cells[3]), num(cells[4])
+                if bal:
+                    a, b = b, a
                 if None not in (a, b, h) and abs(a - b - h) > 0.011:
                     fails.append(f"{tid}「{cells[0].all_text().strip()[:20]}」2025H2（计算）{h} 不等于 {a} 减 {b}")
                 if h is not None and "计算" not in cells[4].all_text() and "计算" not in header_text(ths[4]):
@@ -181,6 +239,8 @@ def check(path):
                     break
 
     for text, n in tree.texts:
+        if GATE_WORDS.search(text):
+            fails.append(f"{section_of(n).attrs.get('id') if section_of(n) else '页外'} 出现内部闸语言「{GATE_WORDS.search(text).group(0)}」：老板版不得出现")
         if ANGLE.search(text):
             fails.append(f"正文含尖括号或比较符，请改写为「低于／超过」：「{text.strip()[:40]}」")
     front = [n for n in nodes if n.tag == "section" and (n.attrs.get("data-part") == "k" or n.attrs.get("id") == "s-cover")]

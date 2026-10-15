@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="report-name" content="skyworth-report">
+<meta name="report-version" content="v1-os-slim-20261015">
+<meta name="report-profile" content="slim">
+<meta name="report-store" content="skyworth-report-slim">
+<meta name="report-edited" content="">
+<title>创维数字｜2026H1 财报分析</title>
+<style>
+:root{
+  --paper:#F6F3EC; --sheet:#FFFDF8; --ink:#1B1A17; --ink2:#4A463E; --ink3:#6E685C;
+  --rule:#DDD6C8; --rule2:#EAE4D8;
+  --sky:#1F5F7A; --sky-soft:#DDEAF0; --sdmc:#B4442C; --sdmc-soft:#F4E3DD;
+  --inf:#9A5B00; --inf-soft:#FBEFD9; --tbd:#5A5853; --tbd-soft:#EFEDE8;
+  --sans:"PingFang SC","Noto Sans SC","Noto Sans CJK SC","Microsoft YaHei","Hiragino Sans GB",system-ui,sans-serif;
+  --serif:"Songti SC","Noto Serif SC","Noto Serif CJK SC","STSong","SimSun",serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--paper);scroll-padding-top:120px}
+body{margin:0;font:13px/1.6 var(--sans);color:var(--ink);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.skip{position:absolute;left:-999px}.skip:focus{left:12px;top:12px;z-index:99;background:#fff;padding:6px 10px}
+
+/* masthead */
+.masthead{position:sticky;top:0;z-index:30;background:rgba(255,253,248,.97);border-bottom:1px solid var(--rule);backdrop-filter:blur(4px)}
+.masthead .in{max-width:min(1520px,96vw);margin:0 auto;padding:8px 40px 0}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.bar-title{font:700 15px/1.2 var(--serif);color:var(--ink);text-decoration:none;margin-right:auto}
+.bar-title small{font:500 12px var(--sans);color:var(--ink3);margin-left:8px}
+.sw{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.sw .swl{font:600 12px/1 var(--sans);color:var(--ink3);padding:7px 6px 7px 9px;background:#fff}
+.sw button{font:600 12px/1 var(--sans);border:0;border-left:1px solid var(--rule2);background:#fff;color:var(--ink2);padding:7px 10px;cursor:pointer}
+.sw button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.save-state{font-size:12px;color:var(--ink3);min-width:1px}
+.tools{display:flex;gap:6px}
+.btn{font:600 12.5px/1 var(--sans);border:1px solid var(--ink);background:var(--sheet);color:var(--ink);padding:8px 12px;border-radius:6px;cursor:pointer}
+.btn:hover{background:var(--ink);color:#fff}
+.btn.primary{background:var(--sky);border-color:var(--sky);color:#fff}
+.btn.primary:hover{background:#174A60}
+.btn[aria-pressed="true"]{background:var(--ink);color:#fff}
+.btn:focus-visible,.sw button:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+.toc{display:flex;gap:0;overflow-x:auto;padding:6px 0 7px;font-size:12.5px;scrollbar-width:thin}
+.toc a{color:var(--ink2);text-decoration:none;padding:4px 8px;border-radius:4px;white-space:nowrap}
+.toc a:hover{background:var(--rule2);color:var(--ink)}
+.toc a[aria-current="true"]{background:var(--sky-soft);color:var(--sky)}
+.toc a.tp{font-weight:700;color:var(--ink3);padding-left:12px}
+.toc a.cmp{color:var(--sdmc)}
+
+.editbar{max-width:min(1520px,96vw);margin:10px auto 0;padding:9px 40px;background:var(--ink);color:#fff;font-size:12px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;border-radius:4px}
+.editbar b{color:#fff}
+.editbar .cnt{color:#E9DFC8}
+.editbar button{font:600 12px/1 var(--sans);border:1px solid #fff;background:transparent;color:#fff;padding:6px 10px;border-radius:5px;cursor:pointer}
+.editbar button:hover{background:#fff;color:var(--ink)}
+
+/* sheet */
+.sheet{max-width:min(1520px,96vw);margin:14px auto 40px;background:var(--sheet);padding:24px 40px 28px;box-shadow:0 1px 2px rgba(40,30,10,.06),0 12px 40px rgba(40,30,10,.08)}
+.cover{display:grid;grid-template-columns:1fr auto;gap:18px 28px;align-items:end;border-bottom:2px solid var(--ink);padding-bottom:14px}
+h1{font:700 30px/1.2 var(--serif);margin:0;letter-spacing:-.01em;color:var(--sky)}
+.subt{font:600 15px/1.4 var(--serif);margin:6px 0 0;color:var(--ink)}
+.meta{color:var(--ink2);font-size:12px;margin:6px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink2);justify-content:flex-end;max-width:520px;margin:0;padding:0;list-style:none}
+.legend li{display:inline-flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+.t{display:inline-block;font:600 11.5px/1 var(--sans);padding:3px 5px 2px;border-radius:3px;vertical-align:1px;white-space:nowrap;margin-left:3px}
+.t.f{background:var(--ink);color:#fff}
+.t.c{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.t.i{background:var(--inf-soft);color:var(--inf);box-shadow:inset 0 0 0 1px #E2C089}
+.nd{display:inline-block;font:600 12px/1 var(--sans);padding:3px 5px 2px;border-radius:3px;background:#F0EEE8;color:#6E685C;box-shadow:inset 0 0 0 1px #C9C5BC;white-space:nowrap}
+.tbd{color:var(--tbd);background:var(--tbd-soft);padding:1px 6px;border-radius:3px;font-style:normal}
+td .tbd{white-space:nowrap}
+.cal{display:inline-block;font:600 11px/1 var(--sans);padding:2px 4px;border-radius:3px;background:#EFE8DA;color:#6B5A3A;margin-left:4px;vertical-align:2px;white-space:nowrap}
+.cal.os{background:var(--sky-soft);color:var(--sky)}
+.cal.px{background:#F1E6EE;color:#7A3F66}
+
+/* parts and sections */
+.part{margin:30px 0 0;padding:10px 0 8px;border-top:3px double var(--ink);font:700 14px/1.3 var(--sans);letter-spacing:.04em;color:var(--ink3)}
+.part.cmp{color:var(--sdmc)}
+section.blk{padding-top:20px;margin-top:16px;border-top:1px solid var(--rule)}
+section.blk>h2{font:700 19px/1.3 var(--serif);margin:0 0 4px}
+section.co-k{border-left:3px solid var(--sky);padding-left:16px}
+section.co-x{border-left:3px solid var(--sdmc);padding-left:16px}
+.lede{margin:0 0 12px;color:var(--ink2);max-width:92ch}
+h3{font:700 13.5px/1.4 var(--sans);margin:14px 0 6px}
+.concl{margin:10px 0 0;padding-left:22px}
+.concl li{margin:0 0 8px;font-size:14.5px;line-height:1.6}
+
+/* data left, note right */
+.duo{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:16px 28px;margin:6px 0 14px;align-items:start}
+.duo-r{padding-top:2px}
+.judg{border-left:2px solid var(--rule);padding-left:14px}
+.judg p{margin:0 0 8px}
+.jl{color:var(--ink)}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.d{width:100%;border-collapse:collapse;font-size:12px}
+table.d caption{caption-side:top;text-align:left;font:700 12.5px var(--sans);padding:0 0 6px;color:var(--ink)}
+table.d th{font-weight:600;text-align:left;color:var(--ink2);border-bottom:1.5px solid var(--ink);padding:5px 6px;vertical-align:bottom}
+table.d td{border-bottom:1px solid var(--rule2);padding:5px 6px;vertical-align:top}
+table.d td:first-child{position:sticky;left:0;background:var(--sheet);min-width:9em}
+table.d th:first-child{position:sticky;left:0;background:var(--sheet)}
+table.d .num{text-align:right;white-space:nowrap}
+table.d tr.grp td{background:#F4F0E7;font-weight:700}
+table.d tr.side-k td:first-child{box-shadow:inset 3px 0 0 var(--sky)}
+table.d tr.side-s td:first-child{box-shadow:inset 3px 0 0 var(--sdmc)}
+table.d th.side-k{color:var(--sky)} table.d th.side-s{color:var(--sdmc)}
+.src{margin:4px 0 0;font-size:12px;color:var(--ink3)}
+.note{font-size:12px;color:var(--ink3)}
+ul.ev{margin:0;padding-left:18px}
+ul.ev li{margin:0 0 6px}
+.k{color:var(--sky)} .s{color:var(--sdmc)}
+.opt{font:600 11px/1 var(--sans);color:var(--ink3);border:1px dashed var(--ink3);border-radius:3px;padding:2px 5px;margin-left:8px;vertical-align:3px}
+
+/* compare switch: rows/columns carry side-k or side-s */
+body[data-side="k"] .side-s,body[data-side="s"] .side-k{display:none}
+
+/* method / footer */
+.method dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:6px 0 0}
+.method dt{font-weight:700}
+.method dd{margin:0;color:var(--ink2)}
+footer.colophon{max-width:min(1520px,96vw);margin:0 auto 30px;padding:0 40px;font-size:12px;color:var(--ink3)}
+
+/* edit mode */
+body.editing [contenteditable="true"]{outline:1px dashed #9DB8C6;outline-offset:1px;cursor:text}
+body.editing [contenteditable="true"]:focus{outline:2px solid var(--sky);background:#F3F8FA}
+body.editing .tbd{background:#FFF3C4;color:#6B5200}
+body.showtbd .tbd{background:#FFE08A;color:#4A3800;box-shadow:0 0 0 2px #F2C230}
+td.mismatch{background:#FCE4DF!important;box-shadow:inset 0 0 0 1px var(--sdmc)}
+.warn-angle{box-shadow:0 0 0 2px #E0A100!important}
+#syncBox{position:fixed;inset:auto 18px 18px auto;width:min(560px,92vw);background:#fff;border:1px solid var(--ink);border-radius:8px;padding:14px;z-index:60;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+#syncBox p{margin:0 0 8px;font-size:12.5px}
+#syncBox textarea{width:100%;height:140px;font:12px/1.4 ui-monospace,Menlo,monospace}
+#syncBox .row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+
+@media (max-width:980px){
+  .masthead .in,.sheet,.editbar,footer.colophon{padding-left:16px;padding-right:16px}
+  .cover{grid-template-columns:1fr}.legend{justify-content:flex-start}
+  .duo{grid-template-columns:minmax(0,1fr)}
+}
+@media print{
+  .masthead,.editbar,#syncBox{display:none!important}
+  html,body{background:#fff}.sheet{box-shadow:none;margin:0;max-width:none}
+  section.blk{break-inside:avoid-page}
+}
+details.appx{margin:.8em 0 0;border-top:1px dashed #ccc;padding-top:.4em}details.appx>summary{cursor:pointer;color:#666;font-size:.9em}details.appx[open]>summary{margin-bottom:.5em}.narr p{margin:.4em 0}
+.ov{scroll-margin-top:7rem}.ov>h3{margin-top:1em}#doc .blk>p,#doc .blk>.judg,#doc .ov,#doc .narr,#doc .method dl{max-width:46rem}
+</style>
+</head>
+<body data-view="all" data-side="both">
+<a class="skip" href="#doc">跳到正文</a>
+<header class="masthead">
+  <div class="in">
+    <div class="bar">
+      <a class="bar-title" href="#top">创维数字｜2026H1 财报分析<small>海外核心版（瘦身）20261015</small></a>
+      <div class="sw viewsw" role="group" aria-label="视图"><span class="swl">视图</span><button type="button" data-view="all" aria-pressed="true">全部</button><button type="button" data-view="k" aria-pressed="false">创维数字本体</button><button type="button" data-view="cmp" aria-pressed="false">海外对比</button></div>
+      <span class="save-state" id="saveState" aria-live="polite"></span>
+      <div class="tools" role="toolbar" aria-label="报告工具">
+        <button class="btn" id="btnEdit" type="button" aria-pressed="false" title="打开后可直接改标题、段落、表格和数字；改动存在本机浏览器"><span class="lbl">修改</span></button>
+        <button class="btn primary" id="btnSync" type="button" hidden title="同步修改（Ctrl/⌘+S）；同步通道在创维数字新飞书链接建立后接入"><span class="lbl">同步修改</span></button>
+        <button class="btn" id="btnPrint" type="button" title="打印或导出 PDF"><span class="lbl">打印</span></button>
+      </div>
+    </div>
+    <nav class="toc" id="toc" aria-label="章节目录"><a href="#s-concl" data-part="k" data-eid="sl-toc.1">核心结论</a><a href="#p-k" data-part="k" class="tp" data-eid="sl-toc.2">前半｜海外核心</a><a href="#s-k-region" data-part="k" data-eid="sl-toc.3">海外收入毛利</a><a href="#s-k-cust" data-part="k" data-eid="sl-toc.4">海外客户渠道</a><a href="#s-k-ar" data-part="k" data-eid="sl-toc.5">海外应收</a><a href="#s-k-debt" data-part="k" data-eid="sl-toc.6">备货与美元敞口</a><a href="#p-cmp" data-part="cmp" class="tp cmp" data-eid="sl-toc.7">后半｜海外对照</a><a href="#s-cmp-os" data-part="cmp" class="cmp" data-eid="sl-toc.8">华曦达对照</a><a href="#s-method" data-part="both" data-eid="sl-toc.9">口径说明</a></nav>
+  </div>
+</header>
+<div class="editbar" id="editbar" hidden>
+  <span><b>修改模式：</b>点击标题、段落、表格格子直接改写；改动自动存在本机浏览器。比较请写「低于／超过」，不要用尖括号。</span>
+  <span class="cnt" id="cntTbd"></span>
+  <button type="button" id="btnTbd" aria-pressed="false">标出待填</button>
+  <button type="button" id="btnDownload">下载改过的页面</button>
+  <button type="button" id="btnReset">清除本机修改</button>
+</div>
+<main class="sheet" id="top">
+<section class="cover" id="s-cover" data-part="both">
+  <div>
+    <h1 data-eid="sl-s-cover.8">创维数字｜2026H1 海外核心</h1>
+    <p class="subt" data-eid="s-cover.2">创维数字股份有限公司（000810.SZ）｜2026 年半年度报告（2026H1）</p>
+    <p data-eid="sl-s-cover.9" class="meta">财报分析｜海外核心版（瘦身）｜编制 2026-10-15（北京时间）｜深交所 A 股｜中国企业会计准则｜合并报表｜原报表单位元，本报换算为亿元人民币｜前半为创维数字海外四块，后半为海外同业对照要点</p>
+  </div>
+  <ul class="legend" aria-label="图例">
+    <li data-eid="s-cover.4"><b class="t f">事实</b>财报／公告原文</li>
+    <li data-eid="s-cover.5"><b class="t c">计算</b>由披露数推算</li>
+    <li data-eid="s-cover.6"><b class="t i">推断</b>分析判断</li>
+    <li data-eid="s-cover.7"><span class="nd">未披露</span>已查，原文未披露</li>
+    <li data-eid="sl-s-cover.10"><span class="cal">全公司合并</span><span class="cal os">海外</span><span class="cal px">币种口径</span><span class="cal px">代理口径</span></li>
+  </ul>
+</section>
+<article class="doc" id="doc">
+
+<section class="blk" id="s-concl" data-part="k"><h2 data-eid="sl-s-concl.6">核心结论</h2><p data-eid="sl-s-concl.7" class="lede">海外核心版：只留海外收入与毛利、海外客户与渠道、海外应收代理、备货借款与美元敞口四块，另附同业对照要点；明细表与推导见完整版。本页只写创维数字股份有限公司（000810.SZ），每条首句点明口径。</p><ol class="concl"><li data-eid="s-concl.3"><b>海外靠什么：</b>海外：海外几乎全是智能终端出口，东南亚运营商＋北美 Nex 为主轴、欧洲 STRONG 仍亏 <b class="t i">推断</b>。2026H1 海外收入 <b>22.37 亿元人民币</b>，同比 +54.5% <b class="t f">事实</b>。</li><li data-eid="s-concl.5"><b>利润从哪来：</b>海外：海外贡献约一半毛利增量 <b class="t c">计算</b>。海外毛利 <b>4.14 亿元人民币</b> <b class="t c">计算</b>，境外毛利率 18.50% <b class="t f">事实</b>。</li><li data-eid="sl-s-concl.8"><b>谁付钱：</b>海外：有原文可落的付钱方只有泰国 True（运营商，金额未披露）和 Nex 美国零售（增速披露、金额未披露） <b class="t f">事实</b>；年报前五名客户匿名、境内外归属未披露，推不出海外付钱方 <b class="t f">事实</b>。欧洲走 STRONG、北美走 Nex 零售、东南亚走运营商 ODM <b class="t i">推断</b>。</li><li data-eid="sl-s-concl.9"><b>海外回款：</b>币种口径：美元应收约 10.22 亿元人民币，代理周转约 83 天 <b class="t c">计算</b>；这只是币种口径代理，推不出境外账龄和海外回款质量 <b class="t f">事实</b>。</li><li data-eid="sl-s-concl.10"><b>钱卡在哪：</b>全公司合并：借来囤芯片——存货半年增加 31.83 亿元，短期借款增至 29.08 亿元，净现金转为净负债约 8.20 亿元 <b class="t c">计算</b>。</li><li data-eid="sl-s-concl.11"><b>美元敞口：</b>币种口径：美元净负债约 4.08 亿元，主要来自进口备料采购 <b class="t i">推断</b>；2026H1 汇兑收益约 0.21 亿元应是净负债随汇率重估所致，不是海外业务变强 <b class="t i">推断</b>。</li></ol></section>
+<div class="part" id="p-k" data-part="k" data-eid="sl-p-k.1">前半｜创维数字海外核心</div>
+<section class="blk co-k" id="s-k-region" data-part="k"><h2 data-eid="sl-s-k-region.111">1 海外收入与毛利 <span class="cal os">海外</span></h2><div class="ov" id="ov-rev"><p data-eid="s-k-region.60"><b class="jl">海外靠什么：</b>海外：2026H1 海外收入 <b>22.37 亿元人民币</b>，同比 +54.5%，比 2025H2 的 21.37 亿元 +4.7% <b class="t c">计算</b>。2025 全年 35.85 亿元、同比 −0.6%，下半年同比回升 14.9% <b class="t c">计算</b>。海外毛利 4.14 亿元、同比 +51.7%；毛利率 18.50%（低于 2025H1 的 18.84%，高于 2025H2 的 16.40%）<b class="t f">事实</b>／<b class="t c">计算</b>。2025H2 毛利率下降原因公司未披露 <b class="t f">事实</b>。</p><p data-eid="s-k-region.60b">全公司合并：海外占营收 41.65%（2025H1 仅 35.37%）<b class="t f">事实</b>。</p><p data-eid="s-k-region.59"><b class="jl">口径：</b>全公司合并：公司只披露「国内销售／国外销售」，按洲／国家金额未披露 <b class="t f">事实</b>。子公司表为单体或子集团披露（海外／代理口径），与本表不相加、不算占比 <b class="t i">推断</b>。</p></div><div class="ov" id="ov-prod"><p data-eid="s-k-prod.77"><b class="jl">备注：</b>海外：海外几乎全部落在智能终端：2026H1 智能终端境外收入 <b>22.29 亿元人民币</b>，占海外收入 22.37 亿元的 99.6% <b class="t c">计算</b>，同比增长 54.6% <b class="t c">计算</b>。</p><p data-eid="s-k-prod.78"><b class="jl">轻比：</b>海外：2026H1 智能终端境外毛利率 18.50%；2025 年 17.39% <b class="t c">计算</b>。</p><p data-eid="s-k-prod.78b">境内：2026H1 智能终端境内毛利率 15.53%；2025 年 12.10% <b class="t c">计算</b>。同一产品线境外高于境内；海外订单抬高毛利率 <b class="t i">推断</b>。</p><p data-eid="s-k-prod.79">海外：海外按产品拆分（运营商机顶盒／宽带／Nex／XR）公司未披露 <b class="t f">事实</b>；Nex Playground 收入同比 +63.12%，金额<span class="nd">未披露</span> <b class="t f">事实</b>。ODM 与 STRONG 自有品牌拆分未披露 <b class="t f">事实</b>。</p></div><div class="ov" id="ov-sub"><h3 data-eid="sl-s-k-region.112">子公司锚 <span class="cal os">海外</span><span class="cal px">代理口径</span></h3><p data-eid="s-k-region.107"><b class="jl">备注：</b>海外：STRONG 在欧洲用自有 STRONG 品牌委托代工，卖给运营商、批发商和零售渠道 <b class="t f">事实</b>。2025 年收入 10.17 亿元、净利润 0.05 亿元；2026H1 收入 4.35 亿元，同比减少 5.7%，亏损 668 万元 <b class="t f">事实</b>／<b class="t c">计算</b>。收入在涨、利润变薄 <b class="t i">推断</b>。</p><p data-eid="s-k-region.108">海外：Vionn 是 Nex Playground 在美国的进口商 <b class="t f">事实</b>；2026H1 收入 2.47 亿元，同比增长 43.3% <b class="t c">计算</b>。北美零售增长主要经它走 <b class="t i">推断</b>。</p><p data-eid="s-k-region.109">海外：印度 KAIRVAM 2025 年收入 2.28 亿元，比上年减少 57.9%；墨西哥 2025 年 1.27 亿元，减少 32.1% <b class="t c">计算</b>。原因公司未披露 <b class="t f">事实</b>。</p><p data-eid="s-k-region.110">海外：STRONG 资产组商誉账面 1.97 亿元、可收回金额 2.49 亿元，余量 26.7% <b class="t f">事实</b>；2026H1 已转亏，是减值测试要盯的点 <b class="t i">推断</b>。</p></div><p data-eid="sl-s-k-region.113" class="src">来源：创维数字 2024、2025 年年度报告，2025、2026 年半年度报告分地区收入与分产品附注；定期报告「主要境外资产情况」（STRONG）、2026-03-28 为子公司担保公告与担保额度调剂公告（Vionn、印度、墨西哥） <b class="t f">事实</b>。分地区、分产品与子公司明细表见完整版 2、3 节。</p></section>
+<section class="blk co-k" id="s-k-cust" data-part="k"><h2 data-eid="sl-s-k-cust.388">2 海外客户与渠道 <span class="cal os">海外</span></h2><div class="ov" id="ov-cust-top5"><p data-eid="s-k-cust.383">海外：年报前五名客户以单位一～五匿名披露，2025 年合计 21.17 亿元、占年度销售总额 24.04% <b class="t f">事实</b>；公开材料无法把单位一～五与具名运营商或零售商一一对应，本稿不点名 <b class="t f">事实</b>。2026 年半年度报告未披露前五名客户 <b class="t f">事实</b>。</p></div><div class="ov" id="ov-ch-sea"><h3 data-eid="sl-s-k-cust.389">东南亚等运营商 ODM</h3><p data-eid="s-k-cust.385">海外：泰国 True 是年报和投资者关系活动记录具名的运营商客户，产品为「第一代健身机顶盒」「机顶盒＋摄像头」 <b class="t f">事实</b>；收入金额<span class="nd">未披露</span>。</p><p data-eid="s-k-region.62">海外：公司自述海外运营商机顶盒在非洲／印度／中东／东南亚／亚太／拉美整体市占率超过 60%，2026H1 东南亚核心运营商多媒体与接入网份额均在 40% 以上 <b class="t f">事实</b>；属公司自述，非第三方份额 <b class="t i">推断</b>。</p><p data-eid="s-k-cust.100"><b class="jl">判断：</b>全公司合并：集中度不高（FY25 前五 24%）；单位一～五无法点名；官网旧闻或第三方规格库中出现过的其他运营商名字，推不出收入、仍在供货或进入前五 <b class="t i">推断</b>。</p></div><div class="ov" id="ov-ch-na"><h3 data-eid="sl-s-k-cust.390">北美 Nex 零售</h3><p data-eid="s-k-cust.384">海外：北美 Nex Playground 走零售渠道，通稿具名美国门店 Target、Best Buy、Walmart、Sam's Club（约 600 家），创维数字负责全球独家生产与分销 <b class="t f">事实</b>；未见北美运营商采购 Nex <b class="t f">事实</b>。这些门店是零售渠道，不是运营商客户，也不说明谁在前五名客户里 <b class="t i">推断</b>。</p><p data-eid="sl-s-k-cust.391">海外：第三方海关提单公开摘要显示，泰国 Cal-Comp 向 Vionn 发运 Nex 整机，深圳侧也直发整机与零件 <b class="t f">事实</b>（第三方）。提单无金额 <b class="t f">事实</b>，单票金额、占 Vionn 收入的比例、与年报单位一～五的对应都推不出 <b class="t i">推断</b>。</p></div><div class="ov" id="ov-ch-eu"><h3 data-eid="sl-s-k-cust.392">欧洲 STRONG</h3><p data-eid="sl-s-k-cust.393">海外：欧洲走 STRONG 自有品牌，委托代工，卖给运营商、批发商和零售渠道；年报无具名运营商名单，也未拆金额 <b class="t f">事实</b>。投资者关系活动记录（2026-09-12）称与 Google Asia Pacific 签智能家居合作协议，首批 Gemini 音箱、门铃、摄像头在欧洲 14 国推出，金额与期限未披露，Google 未公开确认 <b class="t f">事实</b>；经 STRONG 渠道卖 Google 生态硬件 <b class="t i">推断</b>。</p></div><div class="ov" id="ov-ch-cap"><h3 data-eid="sl-s-k-cust.394">产能与组织</h3><p data-eid="sl-s-k-cust.395">海外：产能就近布局——南非自建工厂；土耳其、巴西、印度、泰国、墨西哥合作工厂代工；2025-08 新设哥伦比亚子公司 <b class="t f">事实</b>。海外业务由总经理赫旋兼任海外营销中心和运营商事业部总经理 <b class="t f">事实</b>。</p></div><div class="judg"><p data-eid="s-k-cust.330"><b class="jl">口径：</b>海外：STRONG 合并栏、Vionn 单体和国外销售是三张不同的表，彼此是否包含、内部往来是否抵销均未披露 <b class="t f">事实</b>，所以三者不相加，也不用 STRONG 或 Vionn 除以国外销售当「海外结构占比」 <b class="t i">推断</b>。</p></div><p data-eid="sl-s-k-cust.396" class="src">来源：创维数字 2025 年年度报告前五名客户表与主要境外资产、2026 年半年度报告；投资者关系活动记录（2025-04-02、2026-04-07、2026-09-12）；Nex 通稿与官网；海关提单公开摘要（ImportGenius、BoatDB，2026-10-14 检索） <b class="t f">事实</b>。渠道三分表与提单明细见完整版 3、6 节。</p></section>
+<section class="blk co-k" id="s-k-ar" data-part="k"><h2 data-eid="sl-s-k-ar.1">3 海外应收：只有美元代理 <span class="cal px">币种口径</span><span class="cal px">代理口径</span></h2><div class="ov" id="ov-ar-proxy"><p data-eid="sl-s-k-ar.2"><b class="jl">美元应收：</b>币种口径：美元应收账款 6 月末约 10.22 亿元人民币（2025 年末 9.43 亿元、2025 年 6 月末 9.24 亿元） <b class="t f">事实</b>；按美元应收÷境外收入折算的代理周转约 83 天（2025H1 116 天、2025H2 96 天） <b class="t c">计算</b>。</p></div><div class="ov" id="ov-ar-limit"><p data-eid="sl-s-k-ar.3"><b class="jl">推不出：</b>币种口径：美元应收出自外币货币性项目附注，不含 STRONG 等欧元应收，也不等于境外客户应收；因此推不出境外应收账龄、海外回款质量或海外坏账，也对不到具名运营商 <b class="t f">事实</b>。</p><p data-eid="s-k-cust.387">海外：年报、半年报未见境外应收账款账龄专表；担保／附注未见境外子公司应收专数 <b class="t f">事实</b>。</p><p data-eid="s-k-cust.304">全公司合并：账龄表和组合表都没有境内／境外拆分，这些数只回答全公司信用风险，不能用来判断海外回款 <b class="t f">事实</b>。</p><p data-eid="sl-s-k-ar.4">全公司合并：公司在外汇衍生品风险提示中列明，客户应收账款逾期可能导致远期结汇延期交割，客户调整订单可能使回款预计不准 <b class="t f">事实</b>；这是定性风险提示，没有逾期金额，也不按境内外拆分 <b class="t f">事实</b>。</p></div><p data-eid="sl-s-k-ar.5" class="src">来源：创维数字 2025 年年度报告、2026 年半年度报告外币货币性项目附注、应收账款附注与衍生品投资风险提示 <b class="t f">事实</b>。全公司账龄与坏账明细见完整版 6 节（全公司信用风险）。</p></section>
+<section class="blk co-k" id="s-k-debt" data-part="k"><h2 data-eid="sl-s-k-debt.1">4 备货、借款与美元敞口 <span class="cal">全公司合并</span><span class="cal px">币种口径</span></h2><div class="narr"><div class="ov" id="ov-stock"><p data-eid="sl-s-k-debt.2"><b class="jl">借来囤芯片：</b>全公司合并：6 月末存货 58.55 亿元，比 2025 年末增加 31.83 亿元，其中原材料增加 25.72 亿元 <b class="t c">计算</b>，公司称为存储芯片战略备料 <b class="t f">事实</b>；经营现金流 −22.39 亿元 <b class="t f">事实</b>。短期借款由 11.76 亿元增至 29.08 亿元，信用借款约占 91% <b class="t c">计算</b>；净现金约 17.69 亿元转为净负债约 8.20 亿元 <b class="t c">计算</b>。半年报把短期借款增加说明为「主要系公司通过银行借款支付部分战略备料货款」 <b class="t f">事实</b>；同期全公司应收只增加 4.36 亿元 <b class="t c">计算</b>——钱卡在备料，不是卡在应收回款上 <b class="t i">推断</b>。短期借款中另含供应商融资安排：「供应商已收到的款项」6 月末仅 1.774 亿元人民币（2025 年末约 4.66 亿元）；安排内付款期为收到发票后 210–255 天（2025 年末多为 210–435 天），可比应付为 30–90 天 <b class="t f">事实</b>。其中一类安排原文为「基于进口贸易（采购业务）」的融资、凭「境外汇款申请书」付款，附注未写与芯片或存储采购挂钩 <b class="t f">事实</b>。有息负债没有境内／境外拆分披露 <b class="t f">事实</b>。</p></div><div class="ov" id="ov-fx"><p data-eid="sl-s-k-debt.3"><b class="jl">美元敞口（海外相关）：</b>币种口径：以下美元数出自外币货币性项目附注，按币种统计，不等于境外主体或国外销售 <b class="t f">事实</b>；公司称外汇风险主要与美元、欧元有关，来自海外业务与境外采购销售的外汇收支 <b class="t f">事实</b>。美元短期借款 2025 年末折人民币约 4.69 亿元，6 月末为零，外币短期借款只剩欧元约 1.34 亿元；同期美元应付由约 7.84 亿元升至约 15.69 亿元，高于美元应收约 10.22 亿元 <b class="t f">事实</b>。借款与应付是不同科目，原文没有说明两者关系 <b class="t f">事实</b>，不能读成此消彼长 <b class="t i">推断</b>。按美元外币货币性项目全口径，美元资产约 11.85 亿元（货币资金约 1.58＋应收约 10.22＋其他应收约 0.04）减美元负债约 15.93 亿元（应付约 15.69＋其他应付约 0.24），美元净负债约 4.08 亿元（约 6,000 万美元；分项四舍五入后相加差 0.01） <b class="t c">计算</b>；半年报称应付增加「主要系公司战略备料采购增加」 <b class="t f">事实</b>，美元应付应主要来自进口备料采购 <b class="t i">推断</b>（附注未给应付的采购品类）。2026H1 财务费用附注列汇兑收益约 0.21 亿元 <b class="t f">事实</b>；美元折算汇率由 2025 年末 7.0288 降到 6 月末 6.8109 <b class="t f">事实</b>，这笔收益应是美元净负债随汇率重估所致 <b class="t i">推断</b>，不是海外业务变强；半年报把财务费用变动主因写为银行借款利息支出增加、存款利息收入减少，没有给汇兑归因 <b class="t f">事实</b>。期末远期外汇约 2.75 亿元，约覆盖美元净负债的三分之二 <b class="t c">计算</b>；外汇衍生品额度为任一交易日最高合约价值不超过 15 亿元、保证金不超过 7,500 万元 <b class="t f">事实</b>。</p></div></div><p data-eid="sl-s-k-debt.4" class="src">来源：创维数字 2025 年年度报告、2026 年半年度报告存货、短期借款、供应商融资安排、外币货币性项目与财务费用附注及管理层讨论；2025-12-30 外汇衍生品交易公告 <b class="t f">事实</b>。有息负债、财务费用与存货明细表见完整版 4、5、8 节。</p></section>
+<div class="part cmp" id="p-cmp" data-part="cmp" data-eid="sl-p-cmp.1">后半｜华曦达 × 创维数字：海外可比要点</div>
+<section class="blk co-x" id="s-cmp-os" data-part="cmp"><h2 data-eid="sl-s-cmp-os.1">5 华曦达对照：只看海外可比 <span class="cal os">海外</span></h2><div class="ov" id="ov-cmp"><p data-eid="s-cmp-intro.19">全公司合并：创维数字 2023、2024 年报把 SDMC（华曦达）列为机顶盒行业友商；2025 年报和 2026 半年报没有列名单 <b class="t f">事实</b>。</p><p data-eid="s-cmp-region.29">海外：华曦达客户含 Altice、印度电信运营商和一家全球零售平台 <b class="t f">事实</b>（华曦达招股书）。两家都卖运营商盒子，也都有北美零售盒子 <b class="t i">推断</b>；创维数字多一条欧洲自有品牌渠道 <b class="t f">事实</b>。</p><p data-eid="s-cmp-cust.57"><b class="jl">对照：</b>海外：运营商盒子品类重叠 <b class="t i">推断</b>；按第三方规格库，同一运营商用过两家盒子的只查到越南 Viettel <b class="t f">事实</b>。泰国 True 2025 年规格库只收录到创维数字版 Gen3 <b class="t f">事实</b>，不能据此推出换供应商。</p><p data-eid="s-cmp-cust.112">海外：创维数字一侧未见 onn.／沃尔玛机顶盒 ODM 证据 <b class="t f">事实</b>；Nex 在沃尔玛门店销售不等于 onn. <b class="t f">事实</b>。两家在 onn. 上的重叠推不出 <b class="t i">推断</b>；已有重叠仍只有 Viettel（推不出收入）与德电 Stick≠One <b class="t f">事实</b>。</p><p data-eid="s-cmp-prod.34"><b class="jl">可比性：</b>海外：可比的是运营商盒子和零售盒子这类产品 <b class="t i">推断</b>，但创维数字没有单独披露机顶盒收入和毛利率 <b class="t f">事实</b>，两家只能比方向、不能比数字 <b class="t i">推断</b>。</p></div><p data-eid="sl-s-cmp-os.2" class="src">来源：创维数字年报与投资者关系活动记录；华曦达招股书与北交所问询回复，经「华曦达财报分析」同链引用；Android TV Guide 规格库（2026-10-14 抓取） <b class="t f">事实</b>。两家收入口径不同，本节不比较收入；对照表与 onn. 证据链见完整版 10–14 节。</p></section>
+<section class="blk method" id="s-method" data-part="both"><h2 data-eid="sl-s-method.12">口径说明</h2><dl><dt data-eid="sl-s-method.13">本页</dt><dd data-eid="sl-s-method.14">海外核心版：只留四块海外内容与同业对照要点；明细表、推导链与全公司明细见同名专报完整版。本页数字均取自完整版与其原文出处，未新增数字。</dd><dt data-eid="s-method.4">主体与准则</dt><dd data-eid="s-method.5">创维数字股份有限公司（000810.SZ，深交所 A 股），合并报表口径，适用中国企业会计准则；子公司表为单体或子集团披露。</dd><dt data-eid="s-method.6">单位</dt><dd data-eid="s-method.7">原报表单位为元，本报换算为亿元人民币；外币金额按报告期末汇率折人民币。</dd><dt data-eid="s-method.8">标签</dt><dd data-eid="s-method.9"><b class="t f">事实</b>出自财报或公告原文；<b class="t c">计算</b>由披露数推算；<b class="t i">推断</b>分析判断，无直接原文支持。</dd><dt data-eid="s-method.10">未披露</dt><dd data-eid="s-method.11"><span class="nd">未披露</span>表示已检索、原文未披露；「本稿未录入」表示本稿没有收录，以公司公告为准。</dd><dt data-eid="sl-s-method.15">推不出</dt><dd data-eid="sl-s-method.16">已查原文，没有可以支撑结论的披露，本稿不下结论。</dd><dt data-eid="sl-s-method.17">口径徽章</dt><dd data-eid="sl-s-method.18"><span class="cal">全公司合并</span>合并报表；<span class="cal os">海外</span>国外销售／境外子集；<span class="cal px">币种口径</span>外币货币性项目附注按币种统计的数，不等于境外主体或国外销售；<span class="cal px">代理口径</span>子公司或运营商还原的口径，与官方地区收入不相加。正文首句点明口径。</dd><dt data-eid="sl-s-method.19">来源</dt><dd data-eid="sl-s-method.20">创维数字：2024、2025 年年度报告，2025、2026 年半年度报告；2026-03-28 为子公司担保公告，2025-04 与 2026-08-28 担保额度调剂公告，2025-12-30 外汇衍生品交易公告；投资者关系活动记录（2025-04-02、2026-04-07、2026-09-12）；创维数字官网、Nex 官网；海关提单公开摘要（ImportGenius、BoatDB，2026-10-14 检索）。华曦达：华曦达招股书、北交所问询回复，经「华曦达财报分析」同链引用；Android TV Guide 规格库（2026-10-14 抓取）。</dd></dl></section>
+</article>
+</main>
+<footer class="colophon"><p data-eid="sl-doc.1">创维数字｜2026H1 海外核心版（瘦身）｜编制 2026-10-15｜只写已披露事实及据此的计算与推断；未披露、推不出处已标注；明细见完整版。</p></footer>
+<script>
+(function(){
+"use strict";
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+/* Feishu Chrome-sync constants: replaced atomically by build/replace tooling — keep on one line, no bare // inside */
+const SYNC_VER='v1', SAVE_FILE_TOKEN='', SAVE_URL='', SYNC_INBOX='', SYNC_WEBHOOK='', SYNC_AUTH='', SYNC_CURSOR_WEBHOOK='';
+const meta=n=>{const m=document.querySelector('meta[name="'+n+'"]');return m?m.content:"";};
+const REP=meta("report-name")||"skyworth-report";
+const KEY="rep-edits:"+(meta("report-store")||REP), STALE_KEY=KEY+":stale";
+const body=document.body;
+const btnEdit=$("#btnEdit"), btnSync=$("#btnSync"), editbar=$("#editbar"), saveState=$("#saveState");
+
+/* Every editable unit carries a unique data-eid; originals are captured before any stored edit is applied. */
+const UNITS=$$("[data-eid]");
+const BY=new Map(), ORIG=new Map();
+UNITS.forEach(n=>{ if(BY.has(n.dataset.eid)) console.warn("重复 data-eid",n.dataset.eid); BY.set(n.dataset.eid,n); ORIG.set(n.dataset.eid,n.innerHTML); });
+const hash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36);};
+const readLS=k=>{try{return JSON.parse(localStorage.getItem(k)||"{}")||{};}catch(e){return {};}};
+const writeLS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}};
+
+let EDITS=readLS(KEY), staleN=0;
+(function applyStored(){
+  const stale=readLS(STALE_KEY);
+  Object.keys(EDITS).forEach(eid=>{
+    const rec=EDITS[eid], n=BY.get(eid);
+    if(!n||!rec||typeof rec.h!=="string"){ delete EDITS[eid]; return; }
+    if(rec.o!==hash(ORIG.get(eid))){
+      if(n.innerHTML!==rec.h){ stale[eid]=rec; staleN++; }
+      delete EDITS[eid]; return;
+    }
+    n.innerHTML=rec.h;
+  });
+  writeLS(KEY,EDITS); if(staleN) writeLS(STALE_KEY,stale);
+})();
+
+function changedUnits(){ return UNITS.filter(n=>n.innerHTML!==ORIG.get(n.dataset.eid)); }
+function status(msg){
+  if(!saveState) return;
+  const n=Object.keys(EDITS).length;
+  saveState.textContent=msg||(n?n+" 处修改已存本机浏览器":"")+(staleN?"｜"+staleN+" 处旧修改因原文已更新未套用":"");
+  const c=$("#cntTbd"); if(c) c.textContent="待填 "+$$("#doc .tbd").length+" 处 · 未披露 "+$$("#doc .nd").length+" 处";
+}
+
+/* ───── 修改 mode ───── */
+const pending=new Set(); let timer=0;
+function flush(){
+  pending.forEach(n=>{
+    const eid=n.dataset.eid, o=ORIG.get(eid);
+    if(n.innerHTML===o) delete EDITS[eid]; else EDITS[eid]={o:hash(o),h:n.innerHTML,t:Date.now()};
+    n.classList.toggle("warn-angle",/[<>＜＞≤≥]/.test(n.textContent));
+  });
+  const hadAngle=$$(".warn-angle").length;
+  pending.clear();
+  const ok=writeLS(KEY,EDITS);
+  checkH2();
+  status(!ok?"浏览器存储已满或被禁用：请先「下载改过的页面」":hadAngle?"有比较号：请改写为「低于／超过」":"");
+}
+function setEdit(on){
+  body.classList.toggle("editing",on);
+  btnEdit.setAttribute("aria-pressed",on?"true":"false");
+  $(".lbl",btnEdit).textContent=on?"退出修改":"修改";
+  btnSync.hidden=!on; editbar.hidden=!on;
+  UNITS.forEach(n=>{ if(on) n.setAttribute("contenteditable","true"); else n.removeAttribute("contenteditable"); });
+  if(!on) flush(); else status();
+}
+btnEdit.addEventListener("click",()=>setEdit(!body.classList.contains("editing")));
+document.addEventListener("input",e=>{
+  const n=e.target.closest&&e.target.closest("[data-eid]");
+  if(!n||!body.classList.contains("editing")) return;
+  pending.add(n); clearTimeout(timer); timer=setTimeout(flush,300);
+});
+/* A 待填 placeholder that now holds real text is unwrapped on blur, so it stops counting and looking as 待填 */
+document.addEventListener("focusout",e=>{
+  const n=e.target.closest&&e.target.closest("[data-eid]");
+  if(!n||!body.classList.contains("editing")) return;
+  n.querySelectorAll(".tbd").forEach(sp=>{ const t=sp.textContent.trim(); if(!/^待/.test(t)) sp.replaceWith(...(t?sp.childNodes:[])); });
+  pending.add(n); flush();
+});
+document.addEventListener("paste",e=>{
+  const n=e.target.closest&&e.target.closest('[contenteditable="true"]'); if(!n) return;
+  e.preventDefault();
+  document.execCommand("insertText",false,(e.clipboardData||window.clipboardData).getData("text/plain"));
+});
+document.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){ e.preventDefault(); if(body.classList.contains("editing")) sync(); else download(); return; }
+  const n=e.target.closest&&e.target.closest('[contenteditable="true"]');
+  if(n&&e.key==="Enter"){ e.preventDefault(); if(e.shiftKey&&!/^(TD|TH|A|H1|H2|H3)$/.test(n.tagName)) document.execCommand("insertLineBreak"); }
+});
+document.addEventListener("click",e=>{
+  const a=e.target.closest&&e.target.closest('a[contenteditable="true"]'); if(a) e.preventDefault();
+},true);
+
+/* 2025H2（计算）：流量表＝第 2 列 − 第 3 列（全年减上半年）；期末余额表 t5b＝第 3 列 − 第 2 列（年末减年中）；只校验、不改写 */
+function cellNum(td){
+  const t=td.textContent.replace(/事实|计算|推断|代理口径/g,"").replace(/[,，\s]/g,"").replace(/[−–]/g,"-");
+  return /^-?\d+(\.\d+)?$/.test(t)?parseFloat(t):null;
+}
+function checkH2(){
+  $$('table.t5 tbody tr[data-k="amt"]').forEach(tr=>{
+    const c=tr.cells; if(c.length<6) return;
+    const bal=tr.closest("table").classList.contains("t5b");
+    const a=cellNum(c[bal?3:2]), b=cellNum(c[bal?2:3]), h=cellNum(c[4]);
+    const bad=a!=null&&b!=null&&h!=null&&Math.abs(a-b-h)>0.011;
+    c[4].classList.toggle("mismatch",bad);
+    if(bad) c[4].dataset.hint="应为 "+(a-b).toFixed(2); else delete c[4].dataset.hint;
+    c[4].title=bad?"2025H2（计算）应等于左侧两列之差："+(a-b).toFixed(2):"";
+    if(!bad) c[4].removeAttribute("title");
+  });
+}
+
+/* ───── 下载改过的页面 ───── */
+function cleanClone(){
+  const root=document.documentElement.cloneNode(true);
+  root.querySelectorAll("[contenteditable]").forEach(n=>n.removeAttribute("contenteditable"));
+  const b=root.querySelector("body"); b.classList.remove("editing","showtbd"); b.dataset.view="all"; b.dataset.side="both";
+  root.querySelectorAll("[data-part]").forEach(n=>n.removeAttribute("hidden"));
+  root.querySelectorAll(".viewsw button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.view==="all"?"true":"false"));
+  root.querySelectorAll(".cmpsw button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.side==="both"?"true":"false"));
+  root.querySelectorAll(".mismatch").forEach(n=>{n.classList.remove("mismatch");n.removeAttribute("title");delete n.dataset.hint;});
+  root.querySelectorAll(".warn-angle").forEach(n=>n.classList.remove("warn-angle"));
+  root.querySelectorAll('[class=""]').forEach(n=>n.removeAttribute("class"));
+  root.querySelectorAll("#syncBox").forEach(n=>n.remove());
+  root.querySelectorAll('.toc a[aria-current]').forEach(n=>n.removeAttribute("aria-current"));
+  const eb=root.querySelector("#editbar"); if(eb) eb.hidden=true;
+  const bs=root.querySelector("#btnSync"); if(bs) bs.hidden=true;
+  const be=root.querySelector("#btnEdit"); if(be){ be.setAttribute("aria-pressed","false"); const l=be.querySelector(".lbl"); if(l) l.textContent="修改"; }
+  const ss=root.querySelector("#saveState"); if(ss) ss.textContent="";
+  const ed=root.querySelector('meta[name="report-edited"]'); if(ed) ed.setAttribute("content",new Date().toISOString());
+  return "<!doctype html>\n"+root.outerHTML;
+}
+function download(){
+  flush();
+  const d=new Date(), p=x=>String(x).padStart(2,"0");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([cleanClone()],{type:"text/html;charset=utf-8"}));
+  a.download="创维数字_2026H1_财报分析_"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes())+".html";
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+  status("已下载改过的页面");
+}
+$("#btnDownload").addEventListener("click",download);
+$("#btnReset").addEventListener("click",()=>{
+  if(!confirm("清除本机浏览器里的全部修改，恢复为文件原文？")) return;
+  UNITS.forEach(n=>{ n.innerHTML=ORIG.get(n.dataset.eid); n.classList.remove("warn-angle"); });
+  EDITS={}; staleN=0; writeLS(KEY,EDITS); try{localStorage.removeItem(STALE_KEY);}catch(e){}
+  checkH2(); status("已恢复原文");
+});
+$("#btnTbd").addEventListener("click",e=>{
+  const on=!body.classList.contains("showtbd"); body.classList.toggle("showtbd",on);
+  e.currentTarget.setAttribute("aria-pressed",on?"true":"false");
+});
+
+/* ───── 同步修改（唯一同步按钮；通道接通前只生成修改包） ───── */
+const plain=h=>{const t=document.createElement("template");t.innerHTML=h;return t.content.textContent.replace(/\s+/g," ").trim();};
+const b64=s=>btoa(unescape(encodeURIComponent(s)));
+function ctxOf(n){ const s=n.closest("section[id]"), h=s&&s.querySelector("h2"); return (s?s.id:"head")+(h?" "+plain(h.innerHTML).slice(0,20):""); }
+function buildOps(){ return changedUnits().map(n=>({op:"edit",eid:n.dataset.eid,ctx:ctxOf(n),old:ORIG.get(n.dataset.eid),new:n.innerHTML})); }
+function pack(ops){
+  const d=new Date();
+  const lines=["【创维数字 2026H1 财报分析 同步 "+SYNC_VER+"】"+d.toLocaleString("zh-CN",{hour12:false})+"，共 "+ops.length+" 处修改"];
+  ops.forEach((o,i)=>lines.push((i+1)+". 修改 ["+o.ctx+"] 「"+plain(o.old).slice(0,60)+"」改为「"+plain(o.new).slice(0,60)+"」"));
+  lines.push("SDMCSYNC1:"+b64(JSON.stringify({ver:SYNC_VER,rep:REP,file:SAVE_FILE_TOKEN,ts:d.toISOString(),ops}))+":END");
+  return lines.join("\n");
+}
+function showBox(text,msg){
+  let m=$("#syncBox"); if(m) m.remove();
+  m=document.createElement("div"); m.id="syncBox"; m.setAttribute("role","dialog"); m.setAttribute("aria-label","同步修改");
+  const p=document.createElement("p"); p.textContent=msg;
+  const ta=document.createElement("textarea"); ta.readOnly=true; ta.value=text;
+  const row=document.createElement("div"); row.className="row";
+  const cp=document.createElement("button"); cp.className="btn"; cp.type="button"; cp.textContent="复制修改包";
+  cp.onclick=()=>{ ta.select(); (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).catch(()=>document.execCommand("copy")); cp.textContent="已复制"; };
+  const cl=document.createElement("button"); cl.className="btn"; cl.type="button"; cl.textContent="关闭"; cl.onclick=()=>m.remove();
+  row.append(cp,cl); m.append(p,ta,row); document.body.appendChild(m);
+}
+function sync(){
+  flush();
+  const ops=buildOps();
+  if(!ops.length){ status("还没有修改"); return; }
+  const text=pack(ops);
+  if(!SYNC_WEBHOOK){
+    showBox(text,"同步通道尚未接通（创维数字新飞书链接建立后接入）。"+ops.length+" 处修改已存本机浏览器；可复制修改包发给助理，或在修改栏点「下载改过的页面」。");
+    return;
+  }
+  const hdrs={"Content-Type":"application/json"}; if(SYNC_AUTH) hdrs.Authorization=SYNC_AUTH;
+  btnSync.disabled=true;
+  fetch(SYNC_WEBHOOK,{method:"POST",mode:"cors",headers:hdrs,body:JSON.stringify({msg_type:"text",content:{text},text})})
+    .then(r=>{ if(!r.ok) throw new Error("http "+r.status); status("已提交同步 "+ops.length+" 处修改"); })
+    .catch(err=>{ showBox(text,"自动同步失败，请复制修改包发给助理。["+(err&&err.message||"err")+"]"); if(SYNC_INBOX){ try{window.open(SYNC_INBOX,"_blank","noopener");}catch(e){} } })
+    .finally(()=>{ btnSync.disabled=false; });
+}
+btnSync.addEventListener("click",sync);
+$("#btnPrint").addEventListener("click",()=>window.print());
+
+/* ───── 筛选：视图（全部／创维数字本体／海外对比）与对比侧（两家／只看创维数字／只看华曦达）。只改属性，不碰正文。 ───── */
+function applyView(v){
+  body.dataset.view=v;
+  $$(".viewsw button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.view===v?"true":"false"));
+  $$("[data-part]").forEach(n=>{ const p=n.dataset.part; n.hidden=!(v==="all"||p==="both"||p===v); });
+  try{sessionStorage.setItem(KEY+":view",v);}catch(e){}
+}
+function applySide(s){
+  body.dataset.side=s;
+  $$(".cmpsw button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.side===s?"true":"false"));
+  try{sessionStorage.setItem(KEY+":side",s);}catch(e){}
+}
+$$(".viewsw button").forEach(b=>b.addEventListener("click",()=>applyView(b.dataset.view)));
+$$(".cmpsw button").forEach(b=>b.addEventListener("click",()=>applySide(b.dataset.side)));
+try{ applyView(sessionStorage.getItem(KEY+":view")||"all"); applySide(sessionStorage.getItem(KEY+":side")||"both"); }catch(e){ applyView("all"); applySide("both"); }
+
+/* ───── TOC 当前章节 ───── */
+const links=$$(".toc a[href^='#']");
+if("IntersectionObserver" in window){
+  const io=new IntersectionObserver(es=>{ es.forEach(en=>{ if(!en.isIntersecting) return;
+    links.forEach(a=>{ if(a.getAttribute("href")==="#"+en.target.id) a.setAttribute("aria-current","true"); else a.removeAttribute("aria-current"); }); }); },{rootMargin:"-130px 0px -70% 0px"});
+  links.forEach(a=>{ const t=document.getElementById(a.getAttribute("href").slice(1)); if(t) io.observe(t); });
+}
+
+window.addEventListener("beforeunload",()=>{ if(pending.size) flush(); });
+checkH2(); status();
+})();
+</script>
+</body>
+</html>
