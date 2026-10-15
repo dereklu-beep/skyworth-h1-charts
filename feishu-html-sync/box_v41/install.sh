@@ -97,7 +97,7 @@ cat <<EOF
 INSTALLED. Gate is still closed (derek_confirmed=false on both routes) - nothing will be replaced on Feishu.
 After Derek confirms, set "derek_confirmed": true for that route in $V41/sync_routes.json, then:
   python3 $V41/sync_watch.py --publish $PDX     # guarded same-link replace of the 创维 master
-  nohup python3 $V41/sync_watch.py --loop --force-replace >> $V41/sync_watch.log 2>&1 &
+  nohup python3 $V41/sync_watch.py --loop 30 --force-replace >> $V41/sync_watch.log 2>&1 &
 Rollback of a bad replace:  python3 $V41/sync_watch.py --rollback <TOKEN>
 Uninstall:  cp $V41/sync_watch.py.pre_router_$TS $V41/sync_watch.py   (do not restart the old loop)
 EOF

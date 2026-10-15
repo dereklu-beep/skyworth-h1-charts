@@ -111,3 +111,31 @@ Open the report from its own Feishu link → 修改 → edit → 同步修改. T
 `file` token; the box applies it to that report's master and, once the route is confirmed, same-link replaces that
 same link. Refresh the Feishu file a minute later to see the edit. If the Feishu preview blocks the page's network
 call, use 「下载改过的页面」 or open the file in Chrome and press 同步修改 there — routing is identical.
+
+## 9. Optional follow-up: FXqHb `file` token patch + fallback warning (separate step)
+
+Not part of the install above. The box E2E showed the live 华曦达 v46 page sends packages **without** `file`, so they
+route only by the legacy title/version fallback. Two small changes, no report content change:
+
+1. **Router warning (code only, safe to install any time).** `sync_watch.py` prints
+   `WARNING routed by legacy fallback, package has no file token (ver …, title …) → <label> (<token>); patch that client: sync_routes.py patch-client`
+   for every package routed without `file`. Routing behaviour is unchanged. Also in this step:
+   - `sync_routes.py` title check: a title is a conflict only when it names another route's keyword and none of this
+     route's. The real v46 header `【SDMC 报告同步 v46】<date>` was being held before this fix.
+   - `sync_pull_routed.py` applies v46 edits/deletes to `<template id="report-tpl">` first and mirrors them to `#sheet`.
+     Before this fix, an applied edit landed only in the stale rendered copy and was lost on refresh.
+2. **Token-only patch of the FXqHb master, applied with the next Derek-confirmed publish:**
+
+   ```bash
+   HX=/workspace/sdmc_skyworth/huaxida_report/华曦达对比_排版优化_feishu.html
+   python3 v41/sync_routes.py patch-client "$HX" FXqHbFI37oGOCyxT3NkcVhjnnRg --rep huaxida-h1   # backup "$HX".pre_client_<ts>
+   python3 v41/sync_routes.py check
+   python3 v41/sync_watch.py --publish FXqHbFI37oGOCyxT3NkcVhjnnRg                             # after Derek confirms
+   ```
+
+   It sets `SAVE_FILE_TOKEN` if it is empty and makes the client package `{ver, file:SAVE_FILE_TOKEN, rep:'huaxida-h1', …}`.
+   Nothing else changes, and re-running it is a no-op. Tabs opened before the publish keep routing through the fallback,
+   with the warning, until they are refreshed.
+
+**Superseded by `review_sync_mvp_20261015`:** `review_kit.py upgrade` runs this same patch and adds the review kit and
+webhook channel. If that upgrade is installed, skip step 2 here.

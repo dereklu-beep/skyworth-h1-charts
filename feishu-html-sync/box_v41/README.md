@@ -20,7 +20,7 @@ After Derek confirms (per route, in `v41/sync_routes.json` set `"derek_confirmed
 
 ```bash
 python3 v41/sync_watch.py --publish PdxFbDlbDorRAexT1hRcpHuCnBf      # same-link replace, guarded
-nohup python3 v41/sync_watch.py --loop --force-replace >> v41/sync_watch.log 2>&1 &
+nohup python3 v41/sync_watch.py --loop 30 --force-replace >> v41/sync_watch.log 2>&1 &
 ```
 
 | Command | Effect |
@@ -33,3 +33,7 @@ nohup python3 v41/sync_watch.py --loop --force-replace >> v41/sync_watch.log 2>&
 
 Held packages (unknown / missing token, rep or title conflict) are kept in `v41/sync_held/` with the reason.
 Uninstall: `cp v41/sync_watch.py.pre_router_<ts> v41/sync_watch.py` — but do not restart the old loop.
+
+Optional follow-up (separate step, `SYNC_ROUTE_FIX_DELTA.md` §9): `sync_routes.py patch-client` makes the FXqHb page send
+its `file` token, and the router warns on every legacy-fallback route. This is superseded by
+`review_sync_mvp_20261015` (`review_kit.py upgrade`), which includes the same patch.
