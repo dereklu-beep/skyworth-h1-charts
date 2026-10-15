@@ -21,6 +21,8 @@ REQUIRED = [
     "s-method",
 ]
 OPTIONAL = ["s-cmp-val"]
+# 瘦身版（<meta name="report-profile" content="slim">）：海外四块＋同业对照要点，正文不放表
+REQUIRED_SLIM = ["s-cover", "s-concl", "s-k-region", "s-k-cust", "s-k-ar", "s-k-debt", "s-cmp-os", "s-method"]
 FLOW_H = ["2024 全年", "2025 全年", "2025H1", "2025H2（计算）", "2026H1"]
 # 期末余额表按日历排列；「2025H2 变化」＝2025-12-31 减 2025-06-30，只放期末差额
 BAL_H = ["2024-12-31", "2025-06-30", "2025-12-31", "2025H2 变化（计算）", "2026-06-30"]
@@ -119,17 +121,24 @@ def check(path):
     dup = sorted({i for i in ids if ids.count(i) > 1})
     if dup:
         fails.append(f"重复 id：{dup}")
+    slim = any(n.tag == "meta" and n.attrs.get("name") == "report-profile" and n.attrs.get("content") == "slim" for n in nodes)
+    required, optional = (REQUIRED_SLIM, []) if slim else (REQUIRED, OPTIONAL)
     sec_ids = [n.attrs["id"] for n in nodes if n.tag == "section" and "id" in n.attrs]
-    missing = [s for s in REQUIRED if s not in sec_ids]
+    missing = [s for s in required if s not in sec_ids]
     if missing:
         fails.append(f"缺少章节 id：{missing}")
-    order = [s for s in sec_ids if s in REQUIRED + OPTIONAL]
-    expect = [s for s in REQUIRED[:-1] + OPTIONAL + REQUIRED[-1:] if s in order]
+    order = [s for s in sec_ids if s in required + optional]
+    expect = [s for s in required[:-1] + optional + required[-1:] if s in order]
     if order != expect:
         fails.append(f"章节顺序与骨架不符：{order}")
     pos = {s: i for i, s in enumerate(sec_ids)}
-    if "s-cmp-intro" in pos and any(pos.get(s, -1) > pos["s-cmp-intro"] for s in REQUIRED if s.startswith("s-k-")):
-        fails.append("创维数字本体章节出现在对比导读之后")
+    first_cmp = next((s for s in required if s.startswith("s-cmp-")), None)
+    if first_cmp in pos and any(pos.get(s, -1) > pos[first_cmp] for s in required if s.startswith("s-k-")):
+        fails.append("创维数字本体章节出现在对比章节之后")
+    if slim:
+        tables = [n for n in nodes if n.tag == "table" and section_of(n)]
+        if tables:
+            fails.append(f"瘦身版正文不放表，实有 {len(tables)} 张：{[t.attrs.get('id', '?') for t in tables][:5]}")
 
     eids = [n.attrs["data-eid"] for n in nodes if "data-eid" in n.attrs]
     dup = sorted({e for e in eids if eids.count(e) > 1})
