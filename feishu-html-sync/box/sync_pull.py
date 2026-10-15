@@ -42,6 +42,10 @@ EDIT_TAGS = {'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'li', 'td', 'th', 'dt', 'd
 EDIT_CLS = {'ex-title', 'ex-src', 'summary-text', 'summary-label', 'callout-title'}
 NO_EDIT_CLS = {'ex-editor', 'ex-chart', 'tbl-tools'}
 ROOT_CLS = {'cover', 'doc', 'colophon'}
+# inside <template id="report-tpl"> the v46 client edits these too (its TXT_SEL); the template carries no data-eid
+TPL_EDIT_TAGS = {'summary', 'label'}
+TPL_EDIT_CLS = {'ft', 'sub', 'lb', 'cs', 'cap', 'src', 'note', 'meta', 'yd-q', 'lede'}
+EID_ATTR_RE = re.compile(r'\sdata-eid="[^"]*"')
 RUNTIME_ATTRS = {'contenteditable', 'spellcheck', '_echarts_instance_'}
 ANCHORS = (12, 6, 3, 1)
 MIN_SCORE = 3
@@ -68,7 +72,7 @@ def inbox_token():
     if os.environ.get('SYNC_INBOX_TOKEN'):
         return os.environ['SYNC_INBOX_TOKEN']
     if os.path.exists(p):
-        return json.load(open(p)).get('token')
+        return _load(p, {}).get('token')
     return None
 
 
@@ -94,9 +98,13 @@ def decode_block(b64):
     return json.loads(base64.b64decode(s).decode('utf-8'))
 
 
-def blocks(text):
-    """Return [(pkg, key)] de-duplicated by key. Bad blocks are reported and skipped."""
-    out, seen = [], set()
+def blocks(text, recv=None, seen=None):
+    """Return [(pkg, key)] de-duplicated by key. Bad blocks are reported and skipped.
+
+    recv: when the transport saw the text (drop header / file mtime / inbox read). Packages from old
+    clients or truncated inbox copies may lack `ts`; they are ordered and logged by `_recv` instead.
+    """
+    out, seen = [], (set() if seen is None else seen)
     for m in PKG_RE.finditer(text or ''):
         raw = re.sub(r'\s', '', m.group(1))
         try:
@@ -110,8 +118,27 @@ def blocks(text):
         if key in seen:
             continue
         seen.add(key)
+        pkg.setdefault('_recv', recv or now_iso())
         out.append((pkg, key))
     return out
+
+
+def now_iso():
+    return time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime()) + '.000Z'
+
+
+def pkg_ts(pkg):
+    return str(pkg.get('ts') or pkg.get('_recv') or '')
+
+
+RECV_RE = re.compile(r'^RECV_TS:\s*(\S+)\s*$', re.M)
+
+
+def file_recv(path, text):
+    m = RECV_RE.search(text[:400])
+    if m:
+        return m.group(1)
+    return time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime(os.path.getmtime(path))) + '.000Z'
 
 
 def pkg_key(pkg, raw=''):
@@ -130,6 +157,16 @@ def has_real(pkg):
         op.get('op') in ('edit', 'del') or (op.get('op') == 'data' and not is_meta_key(op.get('key')))
         for op in (pkg.get('ops') or []) if isinstance(op, dict)
     )
+
+
+def rep_ok(pkg, names, legacy_vers):
+    """With --rep, only this report's packages pass. No `rep` passes only for an explicitly listed client ver."""
+    if not names:
+        return True
+    r = str(pkg.get('rep') or pkg.get('report') or '').strip().lower()
+    if r:
+        return r in {n.lower() for n in names}
+    return bool(legacy_vers) and pkg.get('ver') in legacy_vers
 
 
 def is_ping(pkg):
@@ -246,13 +283,28 @@ def plain(h):
 
 
 class Doc:
-    def __init__(self, src):
+    def __init__(self, src, scope=None):
+        """scope='tpl' / 'out': only elements inside / outside <template id="report-tpl"> (if the page has one)."""
         self.src = src
+        self.scope = None
         self.els = [e for e in _Indexer(src).els if e.cs is not None]
         heads = [(e.s, plain(self.inner(e))) for e in self.els if e.tag in ('h1', 'h2', 'h3', 'h4')]
         self._hpos = [h[0] for h in heads]
         self._htxt = [h[1] for h in heads]
+        sects = [(e.s, e.attrs.get('id') or '') for e in self.els if e.tag == 'h2' and e.attrs.get('id')]
+        self._spos = [s[0] for s in sects]
+        self._sid = [s[1] for s in sects]
         self.body = [e for e in self.els if self._in_body(e)]
+        self.tpl = next((e for e in self.els if e.tag == 'template' and e.attrs.get('id') == 'report-tpl'), None)
+        if self.tpl is not None and scope:
+            inside = lambda e: self.tpl.oe <= e.s < self.tpl.cs  # noqa: E731
+            self.body = [e for e in self.body if inside(e) == (scope == 'tpl')]
+            self.scope = scope
+
+    def canon(self, h):
+        """canon(); inside the template data-eid is runtime-only, so it is ignored there."""
+        c = canon(h)
+        return EID_ATTR_RE.sub('', c) if self.scope == 'tpl' else c
 
     def inner(self, el):
         return self.src[el.oe:el.cs]
@@ -270,6 +322,11 @@ class Doc:
         i = bisect.bisect_left(self._hpos, el.s) - 1
         return self._htxt[i] if i >= 0 else ''
 
+    def section_id(self, el):
+        """id of the nearest h2 at or before el (chapter ids are stable; heading text may be edited)."""
+        i = bisect.bisect_right(self._spos, el.s) - 1
+        return self._sid[i] if i >= 0 else ''
+
     def row_info(self, el):
         if el.tag in ('td', 'th') and el.parent is not None and el.parent.tag == 'tr':
             cells = [k for k in el.parent.kids if k.tag in ('td', 'th')]
@@ -284,7 +341,8 @@ class Doc:
         return plain(self.inner(sibs[i]))[:40] if 0 <= i < len(sibs) else ''
 
     def editable(self, el):
-        if not (el.tag in EDIT_TAGS or el.cls() & EDIT_CLS):
+        tpl = self.scope == 'tpl'
+        if not (el.tag in EDIT_TAGS or el.cls() & EDIT_CLS or (tpl and (el.tag in TPL_EDIT_TAGS or el.cls() & TPL_EDIT_CLS))):
             return False
         if 'data-rt' in el.attrs or el.cls() & NO_EDIT_CLS:
             return False
@@ -295,7 +353,7 @@ class Doc:
 
 def op_ctx(op):
     """Context hints from new clients (h,row,col,prev,next) and old ones (ctx='id / row header')."""
-    c = {k: op.get(k) for k in ('h', 'row', 'col', 'prev', 'next', 'tag')}
+    c = {k: op.get(k) for k in ('sid', 'h', 'row', 'col', 'prev', 'next', 'tag')}
     legacy = op.get('ctx') or ''
     if legacy and not c.get('row') and ' / ' in legacy:
         c['row'] = legacy.split(' / ', 1)[1].strip()
@@ -311,7 +369,10 @@ def score(doc, el, c):
     s = 0
     if c.get('tag') and c['tag'] == el.tag:
         s += 1
-    if c.get('h') and _same(doc.heading(el), c['h'], 40):
+    if c.get('sid') and doc._sid:
+        if doc.section_id(el) == c['sid']:
+            s += 4
+    elif c.get('h') and _same(doc.heading(el), c['h'], 40):
         s += 4
     row, col = doc.row_info(el)
     if c.get('row') and _same(row, c['row'], 30):
@@ -326,7 +387,7 @@ def score(doc, el, c):
 
 
 def has_hints(c):
-    return any(c.get(k) for k in ('h', 'row', 'prev', 'next'))
+    return any(c.get(k) for k in ('sid', 'h', 'row', 'prev', 'next'))
 
 
 def pick(doc, cands, c, strict=False):
@@ -357,11 +418,91 @@ def _descendants(el):
 
 # ───────────────────────── edit / delete / data ─────────────────────────
 
+DROP_WITH_CONTENT = {'script', 'style', 'iframe', 'frame', 'frameset', 'object', 'embed', 'applet', 'noscript',
+                     'template', 'textarea', 'select', 'option', 'math', 'foreignobject', 'portal', 'title',
+                     'animate', 'set', 'animatetransform', 'animatemotion', 'handler', 'listener'}
+DROP_TAG = {'base', 'link', 'meta', 'input', 'button', 'img', 'image', 'video', 'audio', 'source', 'track', 'canvas',
+            'form', 'param', 'keygen', 'dialog'}
+URL_ATTRS = {'href', 'xlink:href', 'src', 'action', 'formaction', 'poster', 'background', 'ping', 'data', 'lowsrc',
+             'dynsrc', 'longdesc', 'usemap', 'codebase', 'manifest', 'cite'}
+DROP_ATTRS = {'srcdoc', 'formaction', 'action', 'contenteditable', 'spellcheck'}
+BAD_CSS = re.compile(r'url\s*\(|expression|javascript|behavior|binding|@import|[\\<>]|/\*|position', re.I)
+
+
+def _safe_url(v):
+    v = re.sub(r'[\x00-\x20]', '', v or '').lower()
+    if v.startswith(('#', 'http:', 'https:', 'mailto:')):
+        return True
+    return ':' not in re.split(r'[/?#]', v, 1)[0]
+
+
+class _Sanitizer(HTMLParser):
+    """Re-serialise an edit fragment keeping text, entities and harmless markup; never emits script vectors."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=False)
+        self.out, self.skip = [], 0
+
+    def _attrs(self, tag, attrs):
+        cls = dict(attrs).get('class') or ''
+        fx = 'fx' in cls.split()
+        keep = []
+        for k, v in attrs:
+            v = v if v is not None else None
+            if k.startswith('on') or k in DROP_ATTRS or (fx and k == 'data-eid'):
+                continue
+            if k in URL_ATTRS and not _safe_url(v):
+                continue
+            if k == 'style' and v and BAD_CSS.search(v):
+                continue
+            if k.startswith('data-cmt') and v:
+                v = v[:1000]
+            keep.append(' %s' % k if v is None else ' %s="%s"' % (k, htmlmod.escape(v, quote=True)))
+        return ''.join(keep)
+
+    def handle_starttag(self, tag, attrs, end=''):
+        if self.skip:
+            if tag in DROP_WITH_CONTENT and not end:
+                self.skip += 1
+            return
+        if tag in DROP_WITH_CONTENT:
+            if not end:
+                self.skip = 1
+            return
+        if tag in DROP_TAG:
+            return
+        self.out.append('<%s%s%s>' % (tag, self._attrs(tag, attrs), end if tag not in VOID else ''))
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs, end='/')
+
+    def handle_endtag(self, tag):
+        if self.skip:
+            if tag in DROP_WITH_CONTENT:
+                self.skip -= 1
+            return
+        if tag not in DROP_WITH_CONTENT and tag not in DROP_TAG and tag not in VOID:
+            self.out.append('</%s>' % tag)
+
+    def handle_data(self, d):
+        if not self.skip:
+            self.out.append(d.replace('<', '&lt;').replace('>', '&gt;'))
+
+    def handle_entityref(self, name):
+        if not self.skip:
+            self.out.append('&%s;' % name)
+
+    def handle_charref(self, name):
+        if not self.skip:
+            self.out.append('&#%s;' % name)
+
+
 def clean_fragment(h):
-    h = h or ''
-    h = re.sub(r'\s(?:contenteditable|spellcheck)(?:="[^"]*")?', '', h)
-    h = re.sub(r'<script\b[\s\S]*?</script\s*>', '', h, flags=re.I)
-    return h
+    """Every edit's `new` HTML goes through here before it is spliced into the master."""
+    p = _Sanitizer()
+    p.feed(h or '')
+    p.close()
+    return ''.join(p.out)
 
 
 def _splice(src, a, b, mid):
@@ -391,6 +532,9 @@ def _text_count(raw, form):
 def resolve_edit(doc, op):
     """Return (new_src | None, how, reason)."""
     old, new = op.get('old') or '', clean_fragment(op.get('new') or '')
+    if doc.scope == 'tpl':
+        new = EID_ATTR_RE.sub('', new)
+    canon = doc.canon
     c_old, c_new, p_old, p_new = canon(old), canon(new), plain(old), plain(new)
     if c_old == c_new:
         return None, 'noop', None
@@ -447,7 +591,7 @@ def resolve_edit(doc, op):
         if el is None:
             return None, None, why
         form = next(h[1] for h in hits if h[0] is el)
-        repl = needle_n if form == needle_o else htmlmod.escape(needle_n, quote=False)
+        repl = needle_n if form == needle_o and not re.search('[<>]', needle_n) else htmlmod.escape(needle_n, quote=False)
         raw = doc.inner(el)
         at = _text_find(raw, form)
         inner = raw[:at] + repl + raw[at + len(form):]
@@ -476,10 +620,12 @@ def _hits(doc, cands, needle):
 
 def resolve_del(doc, op):
     old = op.get('old') or ''
+    canon = doc.canon
     for el in doc.by_eid(op.get('eid')):
         if not old or canon(doc.inner(el)) == canon(old):
             return _splice(doc.src, el.s, el.ce, ''), 'eid', None
-    hits = innermost(doc, [e for e in doc.body if doc.editable(e) and old and canon(doc.inner(e)) == canon(old)])
+    hits = innermost(doc, [e for e in doc.body if (doc.editable(e) or doc.scope == 'tpl') and old
+                           and canon(doc.inner(e)) == canon(old)])
     el, why = pick(doc, hits, op_ctx(op))
     if el is None:
         return None, ('already' if why == 'not found' else None), (None if why == 'not found' else why)
@@ -529,6 +675,21 @@ def patch_report_data(src, op):
     return src[:m.start(2)] + body + src[m.end(2):], 'data', '; '.join(notes) or None
 
 
+def _tpl_first(fn, src, op):
+    """Pages that render #sheet from <template id="report-tpl"> keep a stale rendered copy with the same eids.
+    The template is the source of truth: apply there, then mirror onto the rendered copy. Never patch only the
+    rendered copy — the page would rebuild it from the template and the edit would vanish on reload."""
+    if Doc(src).tpl is None:
+        return fn(Doc(src), op)
+    out, how, why = fn(Doc(src, 'tpl'), op)
+    if how is None:
+        return out, how, why
+    o2, h2, _ = fn(Doc(out if out is not None else src, 'out'), op)
+    if o2 is not None:
+        out = o2
+    return out, how, why
+
+
 def apply_ops(src, ops):
     """Apply ops sequentially. Returns (src, [result dict]). Never raises on a bad op."""
     res = []
@@ -537,10 +698,10 @@ def apply_ops(src, ops):
         r = {'i': i, 'op': kind, 'eid': (op or {}).get('eid') if isinstance(op, dict) else None}
         try:
             if kind == 'edit':
-                out, how, why = resolve_edit(Doc(src), op)
+                out, how, why = _tpl_first(resolve_edit, src, op)
                 r['preview'] = '%s → %s' % (plain(op.get('old'))[:40], plain(op.get('new'))[:40])
             elif kind == 'del':
-                out, how, why = resolve_del(Doc(src), op)
+                out, how, why = _tpl_first(resolve_del, src, op)
                 r['preview'] = 'del %s' % plain(op.get('old'))[:40]
             elif kind == 'data':
                 if is_meta_key(op.get('key')):
@@ -614,9 +775,15 @@ def stamp_eids(src):
 
 def _load(path, default):
     try:
-        return json.load(open(path, encoding='utf-8'))
+        with open(path, encoding='utf-8') as f:
+            return json.load(f)
     except Exception:
         return default
+
+
+def _write(path, text):
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(text)
 
 
 def _dump(path, obj):
@@ -645,24 +812,39 @@ class Lock:
             self.f.close()
 
 
-def gather_text(a):
-    txt = ''
-    if not a.no_inbox:
-        try:
-            txt += inbox_text()
-        except Exception as e:
-            print('inbox unavailable, continuing with drops:', repr(e)[:160])
+def _read(path):
+    with open(path, encoding='utf-8', errors='replace') as f:
+        return f.read()
+
+
+def gather_sources(a):
+    """[(text, recv_ts)]. Drops come first: they are complete; inbox copies may be truncated."""
+    out = []
     for d in a.drops:
         for f in sorted(glob.glob(os.path.join(d, '*.txt'))):
-            txt += '\n' + open(f, encoding='utf-8', errors='replace').read()
+            t = _read(f)
+            out.append((t, file_recv(f, t)))
     for f in a.text:
-        txt += '\n' + open(f, encoding='utf-8', errors='replace').read()
-    return txt
+        t = _read(f)
+        out.append((t, file_recv(f, t)))
+    if not a.no_inbox:
+        try:
+            out.append((inbox_text(), now_iso()))
+        except Exception as e:
+            print('inbox unavailable, continuing with drops:', repr(e)[:160])
+    return out
+
+
+def gather_blocks(a):
+    seen, allb = set(), []
+    for text, recv in gather_sources(a):
+        allb += blocks(text, recv, seen)
+    return allb
 
 
 def run(a):
     with Lock(a.target):
-        src = open(a.target, encoding='utf-8').read()
+        src = _read(a.target)
         before = len(src.encode('utf-8'))
 
         if a.stamp:
@@ -671,13 +853,13 @@ def run(a):
             print('stamped %d eids, rev %s' % (n, rev))
             if not a.dry:
                 shutil.copy(a.target, a.target + '.pre_stamp_' + time.strftime('%Y%m%d_%H%M%S'))
-                open(a.target, 'w', encoding='utf-8').write(src)
+                _write(a.target, src)
             return {'stamped': n, 'rev': rev}
 
         done = set(map(str, _load(a.log, [])))
         if a.replay:
             todo = []
-            for line in open(a.replay, encoding='utf-8'):
+            for line in _read(a.replay).splitlines():
                 try:
                     rec = json.loads(line)
                 except Exception:
@@ -687,7 +869,11 @@ def run(a):
             un = _load(UNRESOLVED, [])
             todo = [({'id': 'retry', 'ts': '', 'ops': [u['op'] for u in un]}, 'retry')] if un else []
         else:
-            allb = blocks(gather_text(a))
+            allb = gather_blocks(a)
+            other = [k for p, k in allb if not rep_ok(p, a.rep, a.accept_unlabelled_ver)]
+            if other:
+                print('skip %d package(s) for other/unknown reports' % len(other))
+            allb = [(p, k) for p, k in allb if rep_ok(p, a.rep, a.accept_unlabelled_ver)]
             fresh = [(p, k) for p, k in allb if k not in done and not (p.get('ts') and str(p['ts']) in done)]
             pings = [k for p, k in fresh if is_ping(p)]
             if pings and not a.dry:
@@ -695,7 +881,7 @@ def run(a):
                 _dump(a.log, sorted(done))
                 print('skip ping-only', len(pings))
             todo = [(p, k) for p, k in fresh if has_real(p)]
-            todo.sort(key=lambda t: str(t[0].get('ts') or ''))
+            todo.sort(key=lambda t: pkg_ts(t[0]))
         if not todo:
             print('no new edits')
             return {'packages': []}
@@ -709,17 +895,17 @@ def run(a):
             ok = [r for r in res if r['ok'] and r['how'] not in ('meta', 'noop')]
             bad = [r for r in res if not r['ok']]
             print('%s %s ts=%s ops=%d ok=%d unresolved=%d%s' % (
-                pkg.get('ver', '?'), key, pkg.get('ts', '-'), len(ops), len(ok), len(bad), ' (stale tab)' if stale else ''))
+                pkg.get('ver', '?'), key, pkg_ts(pkg) or '-', len(ops), len(ok), len(bad), ' (stale tab)' if stale else ''))
             for r in res:
                 print('   #%d %-4s %-9s %s%s' % (r['i'], r['op'], r['how'] or 'FAIL', r.get('preview', ''),
                                                   ('  [%s]' % r['reason']) if r['reason'] else ''))
             for r in res:
                 if r['ok'] and r['how'] not in ('already', 'meta', 'noop'):
-                    ledger.append({'key': key, 'ts': pkg.get('ts', ''), 'how': r['how'], 'op': ops[r['i']]})
+                    ledger.append({'key': key, 'ts': pkg_ts(pkg), 'how': r['how'], 'op': ops[r['i']]})
                 if not r['ok']:
-                    unresolved.append({'key': key, 'ts': pkg.get('ts', ''), 'reason': r['reason'],
+                    unresolved.append({'key': key, 'ts': pkg_ts(pkg), 'reason': r['reason'],
                                        'preview': r.get('preview', ''), 'op': ops[r['i']]})
-            report.append({'id': key, 'ts': pkg.get('ts', ''), 'total': len(ops), 'applied': len(ok),
+            report.append({'id': key, 'ts': pkg_ts(pkg), 'ts_missing': not pkg.get('ts'), 'total': len(ops), 'applied': len(ok),
                            'unresolved': [{'i': r['i'], 'reason': r['reason'], 'preview': r.get('preview', '')} for r in bad],
                            'stale_tab': stale})
 
@@ -727,7 +913,9 @@ def run(a):
         changed = bool(ledger)
         rev = rev0
         if changed:
-            after_src, rev = set_rev(src)
+            # persist eids for anything the edit introduced, so the next tab load gets stable ids
+            after_src, _ = stamp_eids(src)
+            after_src, rev = set_rev(after_src)
         after = len(after_src.encode('utf-8'))
         if after > before * 1.15 + 5000:
             raise SystemExit('refuse write: size balloon %s -> %s (would re-bloat)' % (before, after))
@@ -738,7 +926,7 @@ def run(a):
                 out = a.out or a.target
                 if out == a.target:
                     shutil.copy(a.target, a.target + '.pre_sync_' + time.strftime('%Y%m%d_%H%M%S'))
-                open(out, 'w', encoding='utf-8').write(after_src)
+                _write(out, after_src)
                 os.makedirs(os.path.dirname(LEDGER) or '.', exist_ok=True)
                 with open(LEDGER, 'a', encoding='utf-8') as f:
                     for rec in ledger:
@@ -754,7 +942,8 @@ def run(a):
         for r in report:
             r.update(rev=rev, written=changed and not a.dry, at=time.strftime('%Y-%m-%d %H:%M:%S'))
             if a.status_dir and not a.dry:
-                _dump(os.path.join(a.status_dir, re.sub(r'[^A-Za-z0-9_.-]', '_', r['id']) + '.json'), r)
+                sp_ = os.path.join(a.status_dir, re.sub(r'[^A-Za-z0-9_.-]', '_', r['id']) + '.json')
+                _dump(sp_, dict(_load(sp_, {}), **r))
         summary = {'packages': report, 'rev': rev, 'written': changed and not a.dry}
         print('SYNC_RESULT ' + json.dumps(summary, ensure_ascii=False))
         return summary
@@ -773,6 +962,9 @@ def parse_args(argv=None):
     ap.add_argument('--stamp', action='store_true', help='persist data-eid + sync-rev into --target, then exit')
     ap.add_argument('--replay', help='re-apply a sync_ledger.jsonl onto --target (after a writer rebuild)')
     ap.add_argument('--retry-unresolved', action='store_true', help='retry ops in sync_unresolved.json')
+    ap.add_argument('--rep', nargs='*', default=[], help='only apply packages whose `rep` is one of these names')
+    ap.add_argument('--accept-unlabelled-ver', nargs='*', default=[],
+                    help='with --rep: also accept packages without `rep` from these client versions (e.g. v46)')
     a = ap.parse_args(argv)
     if a.drops is None:
         a.drops = [DEFAULT_DROPS] if os.path.isdir(DEFAULT_DROPS) else []

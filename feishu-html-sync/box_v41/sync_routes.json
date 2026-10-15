@@ -1,0 +1,21 @@
+{
+  "routes": [
+    {
+      "token": "PdxFbDlbDorRAexT1hRcpHuCnBf",
+      "label": "创维数字专报",
+      "rep": "skyworth-report",
+      "title_keywords": ["创维数字"],
+      "master": "/workspace/sdmc_skyworth/skyworth_report/opus_final_20261014/创维数字专报_入稿终稿_feishu.html",
+      "derek_confirmed": false
+    },
+    {
+      "token": "FXqHbFI37oGOCyxT3NkcVhjnnRg",
+      "label": "华曦达对比",
+      "rep": "huaxida-h1",
+      "title_keywords": ["华曦达"],
+      "legacy_unlabelled_ver": ["v46"],
+      "master": "/workspace/sdmc_skyworth/huaxida_report/华曦达对比_排版优化_feishu.html",
+      "derek_confirmed": false
+    }
+  ]
+}
