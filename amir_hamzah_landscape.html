@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amir Hamzah 实力、资源与渠道全景透视图</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #111827;
+      --card-border: #1f2937;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent-cw: #10b981;
+      --accent-kin: #f59e0b;
+      --accent-infra: #3b82f6;
+      --accent-fam: #8b5cf6;
+      --accent-badge: #1f2937;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 10px 14px;
+      line-height: 1.34;
+      overflow-y: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Top Bar for Edit Mode */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1f2937;
+      padding: 6px 12px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      border: 1px solid #374151;
+    }
+
+    .toolbar-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: #9ca3af;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 5px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-edit {
+      background: #3b82f6;
+      color: #fff;
+    }
+    .btn-edit.active {
+      background: #ef4444;
+    }
+
+    .btn-download {
+      background: #10b981;
+      color: #fff;
+    }
+
+    .btn-reset {
+      background: #4b5563;
+      color: #fff;
+    }
+
+    /* Header Profile Card */
+    .profile-card {
+      background: linear-gradient(135deg, #1e1e38 0%, #111827 100%);
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .profile-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .person-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: #4f46e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .person-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .person-title {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 1px;
+    }
+
+    .tag-group {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #d1d5db;
+    }
+
+    .tag.primary {
+      background: #064e3b;
+      border-color: #059669;
+      color: #34d399;
+      font-weight: 600;
+    }
+
+    /* Key Numbers Strip */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      text-align: left;
+    }
+
+    .stat-num {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .stat-num.cw { color: var(--accent-cw); }
+    .stat-num.gold { color: var(--accent-kin); }
+    .stat-num.blue { color: var(--accent-infra); }
+    .stat-num.purple { color: var(--accent-fam); }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .stat-desc {
+      font-size: 9.5px;
+      color: #6b7280;
+    }
+
+    /* Visual Architecture Map */
+    .architecture-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 900px) {
+      .architecture-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      position: relative;
+    }
+
+    .card.core {
+      border-top: 3px solid var(--accent-cw);
+    }
+
+    .card.infra {
+      border-top: 3px solid var(--accent-infra);
+    }
+
+    .card.kin {
+      border-top: 3px solid var(--accent-kin);
+    }
+
+    .card.family {
+      border-top: 3px solid var(--accent-fam);
+    }
+
+    .card-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      margin-bottom: 1px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .card-subtitle {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    /* Sub-grid for stores */
+    .stores-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+      margin-bottom: 6px;
+    }
+
+    .store-badge {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      padding: 4px 2px;
+      text-align: center;
+    }
+
+    .store-badge-count {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent-cw);
+    }
+
+    .store-badge-name {
+      font-size: 10.5px;
+      color: #d1d5db;
+      margin-top: 1px;
+      font-weight: 500;
+    }
+
+    .store-badge-sub {
+      font-size: 9px;
+      color: #9ca3af;
+    }
+
+    /* List items */
+    .flow-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .flow-item {
+      background: #161e2e;
+      border: 1px solid #2d3748;
+      border-radius: 6px;
+      padding: 6px 8px;
+    }
+
+    .flow-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+
+    .flow-item-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .flow-tag {
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .flow-tag.green { background: #059669; }
+    .flow-tag.yellow { background: #d97706; }
+    .flow-tag.purple { background: #7c3aed; }
+    .flow-tag.gray { background: #4b5563; }
+
+    .flow-item-desc {
+      font-size: 11px;
+      color: #9ca3af;
+      line-height: 1.32;
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 3px;
+    }
+
+    th, td {
+      padding: 4px 6px;
+      text-align: left;
+      border-bottom: 1px solid #2d3748;
+    }
+
+    th {
+      color: #9ca3af;
+      font-weight: 600;
+      background: #1a2234;
+    }
+
+    td {
+      color: #e5e7eb;
+    }
+
+    /* Editable Outline */
+    [contenteditable="true"] {
+      outline: 2px dashed #3b82f6 !important;
+      background-color: rgba(59, 130, 246, 0.08) !important;
+      cursor: text;
+    }
+
+    .takeaway-banner {
+      background: #1a2333;
+      border-left: 4px solid #3b82f6;
+      border-radius: 0 6px 6px 0;
+      padding: 6px 10px;
+      margin-top: 6px;
+      font-size: 11px;
+      color: #d1d5db;
+      line-height: 1.32;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="report-root">
+  <!-- Editable Toolbar -->
+  <div class="toolbar" id="toolbar-section">
+    <div class="toolbar-title" id="toolbar-status-text">
+      可视化逻辑架构看板 · 支持正文直接修改与留痕下载
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn btn-edit" id="toggle-edit-btn" onclick="toggleEditMode()">启用直接修改</button>
+      <button class="btn btn-download" onclick="downloadEditedHtml()">下载修改后原件</button>
+      <button class="btn btn-reset" onclick="resetContent()">重置恢复</button>
+    </div>
+  </div>
+
+  <!-- Header Section: Amir Hamzah & Jiwaji Family -->
+  <div class="profile-card" id="section-profile">
+    <div class="profile-header">
+      <div class="person-badge">
+        <div class="avatar" id="avatar-initial">AH</div>
+        <div>
+          <div class="person-name" id="profile-name">Amir Hamzah (约 1981–1982 生)</div>
+          <div class="person-title" id="profile-title">巴厘岛 Kohinoor Group 公开 Chairman · 出自巴厘岛知名商业世家 Jiwaji 家族</div>
+        </div>
+      </div>
+      <div class="tag-group" id="profile-tags">
+        <span class="tag primary" id="tag-role">巴厘岛3C渠道龙头核心人</span>
+        <span class="tag" id="tag-scope">非全国总代 · 区域零售霸主</span>
+        <span class="tag" id="tag-family">家族操盘 (Sakinah / Malika)</span>
+      </div>
+    </div>
+    <p class="card-subtitle" id="profile-summary" style="margin-bottom: 0;">
+      <strong>核心实力画像：</strong>深耕巴厘岛与东努沙登加拉（Kupang）的消费电子线下渠道网络，通过独占性运营商专营、多品牌大店与授权单品牌专卖店构筑极高门槛；首都雅加达 SCBD 侧重电信塔与数据中心方案合作（非零售）。
+    </p>
+  </div>
+
+  <!-- Big Numbers: Fast Scan -->
+  <div class="stats-strip" id="section-stats">
+    <div class="stat-card" id="stat-touchpoints">
+      <div class="stat-num cw" id="stat-touchpoints-num">16–17 个</div>
+      <div class="stat-label" id="stat-touchpoints-label">线下零售总触点</div>
+      <div class="stat-desc" id="stat-touchpoints-desc">涵盖主店、品牌专卖店与售后</div>
+    </div>
+    <div class="stat-card" id="stat-core-stores">
+      <div class="stat-num cw" id="stat-core-stores-num">8 家</div>
+      <div class="stat-label" id="stat-core-stores-label">Cellular World 主店</div>
+      <div class="stat-desc" id="stat-core-stores-desc">巴厘 7 家 + 库邦 (Kupang) 1 家</div>
+    </div>
+    <div class="stat-card" id="stat-jkt-stores">
+      <div class="stat-num blue" id="stat-jkt-stores-num">0 家</div>
+      <div class="stat-label" id="stat-jkt-stores-label">雅加达零售门店</div>
+      <div class="stat-desc" id="stat-jkt-stores-desc">雅加达仅 SCBD 办公 (通信塔/DC)</div>
+    </div>
+    <div class="stat-card" id="stat-growth">
+      <div class="stat-num gold" id="stat-growth-num">+30%</div>
+      <div class="stat-label" id="stat-growth-label">交易额增长弹性</div>
+      <div class="stat-desc" id="stat-growth-desc">2023 Q1 手机交易额对比 2019 Q1</div>
+    </div>
+  </div>
+
+  <!-- Main Architecture: Retail Core vs Other Assets -->
+  <div class="architecture-grid" id="section-architecture">
+    
+    <!-- LEFT: Core Business Cellular World (CW) -->
+    <div class="card core" id="section-cw-core">
+      <div class="card-title" id="cw-card-title">
+        板块一：Cellular World（集团核心王牌）
+      </div>
+      <div class="card-subtitle" id="cw-card-subtitle">
+        巴厘岛及邻近岛屿极具影响力的 3C 多品牌分销零售帝国（妹妹 Malika 任 CEO）
+      </div>
+
+      <!-- Store touchpoint breakdown -->
+      <p style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #d1d5db;" id="cw-network-title">
+        1. 线下渠道门店网络（16–17 个线下触点）
+      </p>
+      <div class="stores-grid" id="cw-stores-grid">
+        <div class="store-badge" id="badge-cw-main">
+          <div class="store-badge-count" id="count-cw-main">8</div>
+          <div class="store-badge-name" id="name-cw-main">CW 综合主店</div>
+          <div class="store-badge-sub" id="sub-cw-main">巴厘 7 + Kupang 1</div>
+        </div>
+        <div class="store-badge" id="badge-cw-mi">
+          <div class="store-badge-count" id="count-cw-mi">4</div>
+          <div class="store-badge-name" id="name-cw-mi">Xiaomi 授权店</div>
+          <div class="store-badge-sub" id="sub-cw-mi">CW 自营门头店</div>
+        </div>
+        <div class="store-badge" id="badge-cw-sam">
+          <div class="store-badge-count" id="count-cw-sam">3</div>
+          <div class="store-badge-name" id="name-cw-sam">Samsung SES</div>
+          <div class="store-badge-sub" id="sub-cw-sam">三星体验店</div>
+        </div>
+        <div class="store-badge" id="badge-cw-apple">
+          <div class="store-badge-count" id="count-cw-apple">1</div>
+          <div class="store-badge-name" id="name-cw-apple">eWorld</div>
+          <div class="store-badge-sub" id="sub-cw-apple">Apple 专营门头</div>
+        </div>
+        <div class="store-badge" id="badge-cw-arena">
+          <div class="store-badge-count" id="count-cw-arena">~1</div>
+          <div class="store-badge-name" id="name-cw-arena">Arena / 售后</div>
+          <div class="store-badge-sub" id="sub-cw-arena">笔记本与售后综合</div>
+        </div>
+      </div>
+
+      <!-- Brand relationships -->
+      <p style="font-size: 12px; font-weight: 600; margin: 6px 0 4px 0; color: #d1d5db;" id="cw-brand-title">
+        2. 代理品牌矩阵与合作性质
+      </p>
+      <div class="flow-list" id="cw-brand-flows">
+        <div class="flow-item" id="brand-flow-item">
+          <div class="flow-item-header">
+            <span class="flow-item-name" id="brand-head-name">区域核心授权经销 (非独家总代)</span>
+            <span class="flow-tag green" id="brand-head-tag">Elite / VIP 渠道</span>
+          </div>
+          <div class="flow-item-desc" id="brand-head-desc">
+            <strong>覆盖品牌：</strong>Apple、Samsung、Xiaomi、OPPO、Vivo、Realme 等主流手机品牌。<br>
+            <strong>品类宽度：</strong>手机核心、智能平板、穿戴设备、数码配件、笔电（Arena）。<br>
+            <strong>操盘模式：</strong>品牌商在巴厘岛的重要落地点，CW 自行投资建设并运营 SES、Xiaomi 授权店、eWorld 等品牌门头店。
+          </div>
+        </div>
+      </div>
+
+      <!-- Telco Operators -->
+      <p style="font-size: 12px; font-weight: 600; margin: 8px 0 4px 0; color: #d1d5db;" id="cw-telco-title">
+        3. 电信运营商深度绑定
+      </p>
+      <div class="flow-list" id="cw-telco-flows">
+        <div class="flow-item" id="telco-xl">
+          <div class="flow-item-header">
+            <span class="flow-item-name" id="telco-xl-name">XL Axiata（关系最深）</span>
+            <span class="flow-tag green" id="telco-xl-tag">Diamond Dealer</span>
+          </div>
+          <div class="flow-item-desc" id="telco-xl-desc">
+            门店与 <strong>XL Center 共址运营</strong>；深度销售 Prioritas / myPRIO 后付费套餐；大力推行「购机+套餐」合约捆绑，渠道利润与排他粘性高。
+          </div>
+        </div>
+        <div class="flow-item" id="telco-tsel">
+          <div class="flow-item-header">
+            <span class="flow-item-name" id="telco-tsel-name">Telkomsel（印尼第一大运营商）</span>
+            <span class="flow-tag gray" id="telco-tsel-tag">Modern Channel</span>
+          </div>
+          <div class="flow-item-desc" id="telco-tsel-desc">
+            拥有 Modern Channel 现代渠道经销商奖项记录；常规号卡与数据业务分销，公开合作密集度次于 XL。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Other Sectors & Group Boundaries -->
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      
+      <!-- Istana Kohinoor / DCM / Infrastructure -->
+      <div class="card infra" id="section-infra">
+        <div class="card-title" id="infra-title">
+          板块二：通信基建与数据中心
+        </div>
+        <div class="card-subtitle" id="infra-subtitle">
+          Istana Kohinoor / DCM（雅加达 SCBD 办公枢纽）
+        </div>
+        <div class="flow-item-desc" id="infra-desc" style="font-size: 11px; line-height: 1.4;">
+          <p id="infra-p1" style="margin-bottom: 4px;">
+            <strong>雅加达触点：</strong>设在印尼顶尖商务区 <strong>Jakarta SCBD</strong>，主理全国性企业级与运营商资源对接。
+          </p>
+          <p id="infra-p2" style="margin-bottom: 4px;">
+            <strong>电信铁塔业务：</strong>属 Istana / Protelindo 合作线，是基础设施级重资产投资，<strong>与零售门店卖号卡完全剥离</strong>，避免混同。
+          </p>
+          <p id="infra-p3">
+            <strong>股权治理结构：</strong>与巴厘岛零售并非同一套「全资控股子公司」叙事，DCM 呈现为高管人事交织与共址间接协同。
+          </p>
+        </div>
+      </div>
+
+      <!-- KIN Property & Gallery Kohinoor -->
+      <div class="card kin" id="section-kin-gallery">
+        <div class="card-title" id="kin-title">
+          板块三：地产物业与传统珠宝
+        </div>
+        <div class="card-subtitle" id="kin-subtitle">
+          KIN Property、Gallery Kohinoor（家族基底资产）
+        </div>
+        <div class="flow-item-desc" id="kin-desc" style="font-size: 11px; line-height: 1.4;">
+          <p id="kin-p1" style="margin-bottom: 4px;">
+            <strong>KIN Property（物业地产）：</strong>官方自述隶属于集团，沉淀巴厘岛核心地段优质商用与文旅物业，为渠道门店提供空间支撑。
+          </p>
+          <p id="kin-p2">
+            <strong>Gallery Kohinoor（高端珠宝）：</strong>由 Jiwaji 家族直接运营，传承南亚裔/印尼顶尖商贾传统的珠宝黄金线，展示深厚家族底蕴。
+          </p>
+        </div>
+      </div>
+
+      <!-- Family Governance Structure -->
+      <div class="card family" id="section-family">
+        <div class="card-title" id="family-title">
+          Jiwaji 家族操盘结构分工
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th id="th-member">家族成员</th>
+              <th id="th-role">核心角色与分工</th>
+            </tr>
+          </thead>
+          <tbody id="family-table-body">
+            <tr id="row-amir">
+              <td><strong>Amir Hamzah</strong></td>
+              <td>Kohinoor Group Chairman，统领集团战略、对外合作及电信/跨岛资源</td>
+            </tr>
+            <tr id="row-malika">
+              <td><strong>Malika (妹)</strong></td>
+              <td>Cellular World CEO，主理巴厘及外岛零售一线营运、品牌商务谈判</td>
+            </tr>
+            <tr id="row-sakinah">
+              <td><strong>Sakinah (母)</strong></td>
+              <td>家族重要长辈与根基支柱，维系家族传统珠宝及核心资产秩序</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom Insight Banner -->
+  <div class="takeaway-banner" id="section-bottom-summary">
+    <strong>核心逻辑总结：</strong>
+    Amir Hamzah 的真实影响力是<strong>「巴厘岛消费电子渠道地头蛇 + 家族复合商业掌门人」</strong>。
+    他在巴厘岛拥有坚不可摧的 16–17 家线下渠道门头（8 家 CW 大店 + 授权专营）及独家捆绑的 XL Axiata 运营商资源；而在全国层面，他并非全国总代，在雅加达没有开零售门店，而是通过 SCBD 枢纽处理电信铁塔（Istana/Protelindo）和数据中心方案合作。
+  </div>
+</div>
+
+<script>
+  let isEditing = false;
+  const originalHtml = document.getElementById('report-root').innerHTML;
+
+  // Load from localStorage if present
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('amir_hamzah_report_custom_data');
+    if (saved) {
+      document.getElementById('report-root').innerHTML = saved;
+      // Re-bind toolbar elements
+      initListeners();
+    }
+  });
+
+  function initListeners() {
+    // Keep listeners alive
+  }
+
+  function toggleEditMode() {
+    isEditing = !isEditing;
+    const btn = document.getElementById('toggle-edit-btn');
+    const statusText = document.getElementById('toolbar-status-text');
+    
+    // Select all editable text nodes inside containers
+    const editableElements = document.querySelectorAll(
+      '#profile-name, #profile-title, #tag-role, #tag-scope, #tag-family, #profile-summary, ' +
+      '#stat-touchpoints-num, #stat-touchpoints-label, #stat-touchpoints-desc, ' +
+      '#stat-core-stores-num, #stat-core-stores-label, #stat-core-stores-desc, ' +
+      '#stat-jkt-stores-num, #stat-jkt-stores-label, #stat-jkt-stores-desc, ' +
+      '#stat-growth-num, #stat-growth-label, #stat-growth-desc, ' +
+      '#cw-card-title, #cw-card-subtitle, #cw-network-title, ' +
+      '#count-cw-main, #name-cw-main, #sub-cw-main, ' +
+      '#count-cw-mi, #name-cw-mi, #sub-cw-mi, ' +
+      '#count-cw-sam, #name-cw-sam, #sub-cw-sam, ' +
+      '#count-cw-apple, #name-cw-apple, #sub-cw-apple, ' +
+      '#count-cw-arena, #name-cw-arena, #sub-cw-arena, ' +
+      '#cw-brand-title, #brand-head-name, #brand-head-desc, ' +
+      '#cw-telco-title, #telco-xl-name, #telco-xl-desc, #telco-tsel-name, #telco-tsel-desc, ' +
+      '#infra-title, #infra-subtitle, #infra-p1, #infra-p2, #infra-p3, ' +
+      '#kin-title, #kin-subtitle, #kin-p1, #kin-p2, ' +
+      '#family-title, #section-bottom-summary, td'
+    );
+
+    if (isEditing) {
+      btn.innerText = '完成修改并保存';
+      btn.classList.add('active');
+      statusText.innerText = '【修改模式已开启】：可直接点击页面中任何文字进行编辑，离开后自动保存到本地。';
+      statusText.style.color = '#38bdf8';
+      editableElements.forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.addEventListener('blur', autoSave);
+      });
+    } else {
+      btn.innerText = '启用直接修改';
+      btn.classList.remove('active');
+      statusText.innerText = '可视化逻辑架构看板 · 修改已保存至浏览器。';
+      statusText.style.color = '#9ca3af';
+      editableElements.forEach(el => {
+        el.removeAttribute('contenteditable');
+      });
+      autoSave();
+    }
+  }
+
+  function autoSave() {
+    const root = document.getElementById('report-root');
+    localStorage.setItem('amir_hamzah_report_custom_data', root.innerHTML);
+  }
+
+  function resetContent() {
+    if (confirm('确认恢复初始默认内容吗？所有自定义修改将被重置。')) {
+      localStorage.removeItem('amir_hamzah_report_custom_data');
+      location.reload();
+    }
+  }
+
+  function downloadEditedHtml() {
+    // Generate clean html download without contenteditable attributes
+    const clone = document.documentElement.cloneNode(true);
+    // remove contenteditable attributes in clone
+    const editables = clone.querySelectorAll('[contenteditable]');
+    editables.forEach(e => e.removeAttribute('contenteditable'));
+    
+    // Set edit button back to normal text in download
+    const editBtn = clone.querySelector('#toggle-edit-btn');
+    if (editBtn) {
+      editBtn.innerText = '启用直接修改';
+      editBtn.classList.remove('active');
+    }
+    const status = clone.querySelector('#toolbar-status-text');
+    if (status) {
+      status.innerText = '可视化逻辑架构看板 · 支持正文直接修改与留痕下载';
+      status.style.color = '#9ca3af';
+    }
+
+    const htmlContent = "<!DOCTYPE html>\n" + clone.outerHTML;
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "Amir_Hamzah_实力与渠道全景看板.html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+</body>
+</html>
