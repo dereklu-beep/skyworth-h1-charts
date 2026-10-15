@@ -23,6 +23,10 @@ REQUIRED = [
 OPTIONAL = ["s-cmp-val"]
 # 瘦身版（<meta name="report-profile" content="slim">）：海外四块＋同业对照要点，正文不放表
 REQUIRED_SLIM = ["s-cover", "s-concl", "s-k-region", "s-k-cust", "s-k-ar", "s-k-debt", "s-cmp-os", "s-method"]
+# 瘦身 v2（content="slim_v2"）：同一章节骨架；四拍核心块各恰好 1 张表，左表（.duo-l）右判（.duo-r .judg）；
+# 核心结论恰好 4 句；结论与华曦达对照不放表
+CORE_SLIM = ["s-k-region", "s-k-cust", "s-k-ar", "s-k-debt"]
+DATE_H = re.compile(r"(20\d\d)-(\d\d)-(\d\d)")
 FLOW_H = ["2024 全年", "2025 全年", "2025H1", "2025H2（计算）", "2026H1"]
 # 期末余额表按日历排列；「2025H2 变化」＝2025-12-31 减 2025-06-30，只放期末差额
 BAL_H = ["2024-12-31", "2025-06-30", "2025-12-31", "2025H2 变化（计算）", "2026-06-30"]
@@ -121,7 +125,8 @@ def check(path):
     dup = sorted({i for i in ids if ids.count(i) > 1})
     if dup:
         fails.append(f"重复 id：{dup}")
-    slim = any(n.tag == "meta" and n.attrs.get("name") == "report-profile" and n.attrs.get("content") == "slim" for n in nodes)
+    profile = next((n.attrs.get("content") for n in nodes if n.tag == "meta" and n.attrs.get("name") == "report-profile"), "")
+    slim = profile in ("slim", "slim_v2")
     required, optional = (REQUIRED_SLIM, []) if slim else (REQUIRED, OPTIONAL)
     sec_ids = [n.attrs["id"] for n in nodes if n.tag == "section" and "id" in n.attrs]
     missing = [s for s in required if s not in sec_ids]
@@ -135,10 +140,47 @@ def check(path):
     first_cmp = next((s for s in required if s.startswith("s-cmp-")), None)
     if first_cmp in pos and any(pos.get(s, -1) > pos[first_cmp] for s in required if s.startswith("s-k-")):
         fails.append("创维数字本体章节出现在对比章节之后")
-    if slim:
-        tables = [n for n in nodes if n.tag == "table" and section_of(n)]
-        if tables:
-            fails.append(f"瘦身版正文不放表，实有 {len(tables)} 张：{[t.attrs.get('id', '?') for t in tables][:5]}")
+    tables = [n for n in nodes if n.tag == "table" and section_of(n)]
+    if profile == "slim" and tables:
+        fails.append(f"瘦身版正文不放表，实有 {len(tables)} 张：{[t.attrs.get('id', '?') for t in tables][:5]}")
+    if profile == "slim_v2":
+        secs = {n.attrs["id"]: n for n in nodes if n.tag == "section" and "id" in n.attrs}
+        for sid in CORE_SLIM:
+            sec = secs.get(sid)
+            if not sec:
+                continue
+            ts = [t for t in tables if section_of(t) is sec]
+            if len(ts) != 1:
+                fails.append(f"{sid} 应恰好 1 张表（禁 0 表、最多 1 表），实有 {len(ts)} 张")
+                continue
+            dl = [a for a in ts[0].anc() if "duo-l" in a.cls()]
+            duo = dl[0].parent if dl else None
+            if not duo or "duo" not in duo.cls():
+                fails.append(f"{sid} 的表不在 .duo > .duo-l 里（应左表右判）")
+                continue
+            kids = [c for c in duo.children if c.tag == "div"]
+            if len(kids) != 2 or "duo-l" not in kids[0].cls() or "duo-r" not in kids[1].cls() \
+                    or not any("judg" in c.cls() for c in kids[1].walk()):
+                fails.append(f"{sid} 的 .duo 应为 .duo-l（表）在前、.duo-r（含 .judg 判断）在后")
+            h2 = next((c for c in sec.children if c.tag == "h2"), None)
+            if not h2 or sec.children.index(h2) > sec.children.index(duo):
+                fails.append(f"{sid} 应先有判断标题（h2）再见表")
+        for sid in ("s-concl", "s-cmp-os"):
+            ts = [t for t in tables if secs.get(sid) is not None and section_of(t) is secs[sid]]
+            if ts:
+                fails.append(f"{sid} 不放表，实有 {len(ts)} 张")
+        concl = secs.get("s-concl")
+        if concl:
+            lis = [c for c in concl.walk() if c.tag == "li"]
+            if len(lis) != 4:
+                fails.append(f"核心结论应恰好 4 句（主线四拍），实有 {len(lis)} 条")
+        for t in tables:
+            ths = [header_text(c) for c in t.walk() if c.tag == "th"]
+            dates = [DATE_H.search(h).groups() for h in ths if DATE_H.search(h)]
+            if dates != sorted(dates):
+                fails.append(f"{t.attrs.get('id', '?')} 日期列须按日历从早到晚：{[h for h in ths if DATE_H.search(h)]}")
+            if "t5" not in t.cls() and any("变化" in h for h in ths):
+                fails.append(f"{t.attrs.get('id', '?')} 紧凑表不放变化列")
 
     eids = [n.attrs["data-eid"] for n in nodes if "data-eid" in n.attrs]
     dup = sorted({e for e in eids if eids.count(e) > 1})
